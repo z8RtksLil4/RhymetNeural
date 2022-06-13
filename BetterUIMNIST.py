@@ -14,9 +14,9 @@ DerivativeDic = {
 
 
 
-def NeuralNetwork(UIList, Activations, InputData, ExpeOutput, ExpectedCalc, TrainingVal, BatchVal, LearnRate, ChunkRate):
+def NeuralNetwork(UIList, Activations, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate, ChunkRate):
     ActivatName = []
-    for i in range(3):
+    for i in range(len(Activations)):
             ActivatName.append(Activations[i].__name__)
     ActivatName = str(ActivatName).replace("'", "")
 
@@ -89,7 +89,7 @@ def NeuralNetwork(UIList, Activations, InputData, ExpeOutput, ExpectedCalc, Trai
                 input = UnChunk(input) 
 
 
-            Expected = ExpectedCalc(ExpeOutput[CorNum])
+            Expected = ExpeOutput[CorNum]
 
 
 
@@ -184,7 +184,7 @@ def NeuralNetwork(UIList, Activations, InputData, ExpeOutput, ExpectedCalc, Trai
 
 
 
-def TestingNetwork(UIList, Activations, InputData, ExpeOutput, ExpectedCalc, TrainingVal, BatchVal, ChunkRate):
+def TestingNetwork(UIList, Activations, InputData, ExpeOutput, TrainingVal, BatchVal, ChunkRate):
 
     print("%")
 
@@ -249,7 +249,7 @@ def TestingNetwork(UIList, Activations, InputData, ExpeOutput, ExpectedCalc, Tra
                 input = UnChunk(input) 
 
 
-            Expected = ExpectedCalc(ExpeOutput[CorNum])
+            Expected = ExpeOutput[CorNum]
 
 
 
