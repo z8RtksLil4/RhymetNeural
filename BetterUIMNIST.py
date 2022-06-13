@@ -14,33 +14,23 @@ DerivativeDic = {
 
 
 
-def NeuralNetwork(UIList, Activations, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate, ChunkRate):
-    ActivatName = []
-    for i in range(len(Activations)):
-            ActivatName.append(Activations[i].__name__)
-    ActivatName = str(ActivatName).replace("'", "")
+def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate):
 
-    DataSaved = str(UIList) + "\n" + str(ActivatName)+ "\n" + str(ChunkRate)
-    open("UseRequired.txt", "w").write(DataSaved)
+
+
+
+    MainList = Frame.NeurList
+    Activations = Frame.ActivList
+    CostFunction = Frame.CostFun
+    PoolNumb = Frame.PoolNumb
+    ChunkRate = Frame.ChunkNumb
+    
     print("%")
 
 
 
-    MainList = []
-    CostFunction = Activations.pop(0)
-    print(CostFunction)
 
-    PoolNumb = 0
 
-    for i in range(len(UIList)):
-
-        if UIList[i] == "Pool":
-
-            PoolNumb += 1
-
-        else:
-
-            MainList.append(UIList[i])
 
 
 

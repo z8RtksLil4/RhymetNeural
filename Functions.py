@@ -1,6 +1,25 @@
 import random
 import math
 
+
+
+#This is a NeuralFrame, It is used for Compressing Data in Parameters
+class NeuralFrame:
+    def __init__(self, ParNeur, ParActi):
+        self.NeurList = []
+        self.ActivList = ParActi
+        self.CostFun = self.ActivList.pop(0)
+        self.PoolNumb = 0
+        self.ChunkNumb = 0
+        for i in range(len(ParNeur)):
+            if ParNeur[i] == "Pool":
+                self.PoolNumb += 1
+            else:
+                self.NeurList.append(ParNeur[i])
+
+        if self.PoolNumb > 0:
+            self.ChunkNumb = int(math.sqrt(self.NeurList[-1]))
+
 #This is a Neural Network pool
 def PoolAry(Kw, Kh, Image):
     NewImage = []
@@ -140,7 +159,7 @@ def GetFresh(LayLis):
     return(WFreash)
 
 
-
+#This is used to get text from a file
 class TxtGetW():
     def __init__(self, FileNum):
         NetWeTxt = open("WBL" + str(FileNum) + "/WeightsLay.txt", "r")
@@ -148,7 +167,8 @@ class TxtGetW():
         NetWeTxt.close()
         exec('self.Weights = ' + Content)
 
-#this gets the Weights from text file
+
+#This gets the Weights from text file
 def GetTxT(LayLis):
     WFtxt = []
 
@@ -164,7 +184,10 @@ def GetTxT(LayLis):
 
 
 #Creates Weights in a text file
-def MakeTxT(LayLis):
+def MakeTxT(Frame):
+
+    LayLis = Frame.NeurList
+
     WFreash = []
 
     for i in range(len(LayLis) - 1):
@@ -181,6 +204,21 @@ def MakeTxT(LayLis):
 
             open("WBL" + str(FileNum) + "/WeightsLay.txt", "w").write(str(srtTofile))
             open("WBL" + str(FileNum) + "/BiasLay.txt", "w").write("0.0")
+
+
+
+    ActivatName = []
+    for i in range(len(Frame.ActivList)):
+            ActivatName.append(Frame.ActivList[i].__name__)
+    ActivatName = str(ActivatName).replace("'", "")
+
+
+
+    ActivatName = "[" + Frame.CostFun.__name__  + ", " +  str(ActivatName[1:-1]) + "]"
+    DataSaved = str(LayLis) + "\n" + str(ActivatName)+ "\n" + str(Frame.ChunkNumb)
+    open("UseRequired.txt", "w").write(DataSaved)
+
+    print("Previous data overwritten, New data inserted")
 
     return(WFreash)
 
@@ -239,7 +277,7 @@ def FreshBi(BiLa):
     
     return(fre)
 
-#Default Expected Calculation
+#Calculation foe example 
 def CalcExpe(x):
     NEl = []
     for i in range(10):
