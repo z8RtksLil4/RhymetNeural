@@ -1,7 +1,8 @@
 from webbrowser import MacOSX
 from mnist import MNIST
 from BetterUIMNIST import * 
-# reading csv files
+
+#This is an example Neural Network, Just Run this file and the example will work
 
 mndata = MNIST('samples')
 

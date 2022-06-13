@@ -1,4 +1,4 @@
-Rhymet is an open source Neural Network system Devloped by Ida. 
+Rhymet is an open source Neural Network system Devloped by Ida (Me). 
 A bit of Knowledge of Neural Networks is recommended before using Rhymet.
 You can look at Example.py for an example Network
 
@@ -15,8 +15,9 @@ Output:  CalcCost <- 10
 Hidden:  Sigmoid <- 78
 Input :  Sigmoid <- 784
 
-if you wanted to you could include the string "Pool" (Case Sensitive) in the Neurons List and that would Pool the data you give it using a 3 by 3 Kernal and the 
-number of input neurons sqare root should be 2 less for each pool. example using 1 pool on an input of 784
+if you wanted to you could include the string "Pool" (Case Sensitive) in the Neurons List and that would Pool the data you give 
+it using a 3 by 3 Kernal and the number of input neurons sqare root should be 2 less for each pool. 
+example is using 1 pool on an input of 784
 
     √784 = 28
     28 - 2 - 26
@@ -34,6 +35,21 @@ will be called again and the current weights and biases will be replaced.
 
 
 Moving on this is how to use the NeuralNetwork
+
+NeuralNetwork(Frame, Inputs, ExpectedOuputs, NumberOfUpdates, BatchNumber, LearningRate)
+
+The Frame Should be the same one you used when you used MakeTxT Earlier, 
+the Inputs should be a collection of list equal in size to the Neurons in your InputLayer
+The ExpectedOuputs should be a collection of list equal in size to the Neurons in your OutputLayer
+The NumberOfUpdates is *how many times* it will BackPropagate and Update the Weights and biases
+The BatchNumber is how many Inputs it will BackPropagate through until doing BackPropagation
+The Learning Rate is how much each BackPropagation counts (Recommended : 0.10)
+
+
+After doing all that the Network should start working 
+
+
+
 
 
 

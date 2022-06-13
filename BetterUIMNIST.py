@@ -32,8 +32,6 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
 
 
-
-
     BarMod = BatchVal / 50
 
 
@@ -61,7 +59,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
         WeightsSummed = GetFresh(MainList)
 
-        LoadUn = "-------------------------------------------------]"
+        LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]"
         LoadingPro = ""
 
         for Numbers in range(BatchVal):
@@ -146,7 +144,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
 
             if Numbers % BarMod < 1:
-                LoadingPro += "="
+                LoadingPro += "▉"
 
                 sys.stdout.write("\033[F")
                 print("[" + LoadingPro + LoadUn[int(Numbers / BarMod) : 50])
@@ -159,7 +157,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
             #print("\n")
 
         sys.stdout.write("\033[F")
-        print("[==================================================]")
+        print("[▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉]")
         print("\n")
         print(str(round((PreCor / BatchVal) * 100, 2)) + "%")
         print("\n")
@@ -174,33 +172,21 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
 
 
-def TestingNetwork(UIList, Activations, InputData, ExpeOutput, TrainingVal, BatchVal, ChunkRate):
+def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate):
 
+
+
+
+    MainList = Frame.NeurList
+    Activations = Frame.ActivList
+    CostFunction = Frame.CostFun
+    PoolNumb = Frame.PoolNumb
+    ChunkRate = Frame.ChunkNumb
     print("%")
 
 
 
-    MainList = []
-    CostFunction = Activations.pop(0)
-    print(CostFunction)
-
-    PoolNumb = 0
-
-    for i in range(len(UIList)):
-
-        if UIList[i] == "Pool":
-
-            PoolNumb += 1
-
-        else:
-
-            MainList.append(UIList[i])
-
-
-
     BarMod = BatchVal / 50
-
-
 
 
     for MNnum in range(TrainingVal):
@@ -286,10 +272,6 @@ def TestingNetwork(UIList, Activations, InputData, ExpeOutput, TrainingVal, Batc
                 print("[" + LoadingPro + LoadUn[int(Numbers / BarMod) : 50])
 
 
-            #print("\n")
-            #print("Cost: " + str(Cost))
-            #print("Output: " + str(Layers[0]))
-            #print("\n")
 
         sys.stdout.write("\033[F")
         print("[==================================================]")
