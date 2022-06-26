@@ -1,4 +1,4 @@
-import sys
+
 import numpy as np
 import math
 from Functions import * 
@@ -14,11 +14,11 @@ DerivativeDic = {
 
 
 
-def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate):
+def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
 
-
+    BatchVal = abs(BatchValTrue)
     MainList = Frame.NeurList
     Activations = Frame.ActivList
     CostFunction = Frame.CostFun
@@ -33,7 +33,6 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
 
     BarMod = BatchVal / 50
-
 
 
 
@@ -59,7 +58,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
         WeightsSummed = GetFresh(MainList)
 
-        LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]"
+        LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
         LoadingPro = ""
 
         for Numbers in range(BatchVal):
@@ -91,6 +90,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
 
             Layers = [input]
             LayN = input
+            #This is using the network itself
             for i in range(len(Turned)):
                 Layers.append((np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[i]).tolist()), Activations[i])) + BiasLis[i]).tolist())
                 LayN = Layers[i + 1]
@@ -110,31 +110,28 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
             prevcalc = CosLis
             
 
-            for l in range(len(Layers) - 1):
+            for l in range(len(Layers) - 1): #Going Through the Layers
+            
 
-                TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist()
+                TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist() 
 
-                for n in range(len(Layers[l])):
+                for n in range(len(Layers[l])): #Going Through the Neurons
 
 
-                    LayBackPro = (DerivativeDic[Activations[l]](Layers[l][n]) * prevcalc[n])
+                    LayBackPro = (DerivativeDic[Activations[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
 
                     BiasNew[l] += LearnRate * float(1 * LayBackPro)
 
-                    for w in range(len(Weights[l][n])):
+                    for w in range(len(Weights[l][n])): #Going Through the Weights
 
+
+                        #LearnRate * (Neuronᴸ⁺¹[w] * Activation′(Neuronⁿ) * (sum(Turnedᴸ⁻¹[n]) or CostFunction(E, R)))
                         WeightsSummed[l][n][w] += LearnRate * float(Layers[l + 1][w] * LayBackPro)
 
                         TimCal[w][n] = float(Turned[l][w][n] * LayBackPro)
 
 
-
-                newalc = []
-                for i in range(len(TimCal)):
-                    newalc.append(sum(TimCal[i]))
-
-
-                prevcalc = newalc
+                prevcalc = TimCal
 
             AIaws = FindMax(Layers[0])
             RLaws = FindMax(Expected)
@@ -142,37 +139,28 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate
                 PreCor += 1
 
 
-
             if Numbers % BarMod < 1:
-                LoadingPro += "▉"
-
-                sys.stdout.write("\033[F")
-                print("[" + LoadingPro + LoadUn[int(Numbers / BarMod) : 50])
+                LoadingPro = Frame.loadbar(LoadingPro)
 
 
 
-            #print("\n")
-            #print("Cost: " + str(Cost))
-            #print("Output: " + str(Layers[0]))
-            #print("\n")
 
-        sys.stdout.write("\033[F")
-        print("[▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉]")
-        print("\n")
+
+    
+
         print(str(round((PreCor / BatchVal) * 100, 2)) + "%")
+
         print("\n")
 
+        AddTxT(WeightsSummed, MainList, BatchValTrue)
 
-
-        AddTxT(WeightsSummed, MainList, BatchVal)
-
-        AddBia(BiasNew, MainList, BatchVal)
+        AddBia(BiasNew, MainList, BatchValTrue)
 
     print("Program ended, Training Complete")
 
 
 
-def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRate):
+def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal):
 
 
 
@@ -259,8 +247,8 @@ def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal, LearnRat
             
 
 
-            AIaws = FindMax(Layers[0])
-            RLaws = FindMax(Expected)
+            AIaws = np.argmax(Layers[0])
+            RLaws = np.argmax(Expected)
             if AIaws == RLaws:
                 PreCor += 1
 
@@ -303,12 +291,6 @@ def UseNetwork(InputData):
     Activations = Sert.Activa
     ChunkRate = Sert.ChunkRa
 
-    print(Activations[0].__name__)
-
-    #exec("Activations = " + VarLis[1])
-    #exec("ChunkRate = " + VarLis[2])
-
-    print("%")
 
 
 
@@ -377,4 +359,4 @@ def UseNetwork(InputData):
     Activations.reverse()
     
 
-    print(FindMax(Layers[0]))
+    return np.argmax(Layers[0])

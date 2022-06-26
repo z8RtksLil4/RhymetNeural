@@ -1,10 +1,14 @@
 import random
 import math
+import sys
+from turtle import update
 
 
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
 class NeuralFrame:
+    
+
     def __init__(self, ParNeur, ParActi):
         self.NeurList = []
         self.ActivList = ParActi
@@ -18,7 +22,14 @@ class NeuralFrame:
                 self.NeurList.append(ParNeur[i])
 
         if self.PoolNumb > 0:
-            self.ChunkNumb = int(math.sqrt(self.NeurList[-1]))
+            self.ChunkNumb = int(math.sqrt(self.NeurList[-1]) + 2 * self.PoolNumb)
+
+        self.loadbar = LoadingBarPre
+
+    def SetCusLoad(self, load):
+        self.loadbar = load
+        return self
+
 
 #This is a Neural Network pool
 def PoolAry(Kw, Kh, Image):
@@ -49,6 +60,12 @@ def PoolAry(Kw, Kh, Image):
     return (NewImage)
 
 
+
+def SumCheck(x):
+    if type(x) != list:
+        return x
+
+    return sum(x)
 
 #Turns a 1D list into a 2D list
 def Chunk(Lis, Spli):
@@ -295,3 +312,116 @@ def CalcExpe(x):
 
 
 
+#these are just loading functions
+
+
+def LoadingBarPre(LoadingPro):
+    LoadingPro += "█"
+    LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
+    sys.stdout.write("\033[F")
+    NewLoad = "⦗" + LoadingPro + LoadUn[len(LoadingPro) : 51]
+    print(NewLoad)
+
+
+    return LoadingPro
+
+
+def LoadingBarHig(LoadingPro):
+    LoadingPro += "▩"
+    LoadUn = "□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□⦘"
+    sys.stdout.write("\033[F")
+    NewLoad = "⦗" + LoadingPro + "█" + LoadUn[len(LoadingPro) : 51]
+     
+    print(NewLoad)
+    if NewLoad == "⦗▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩█⦘":
+        sys.stdout.write("\033[F")
+        print("⦗▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩▩⦘")
+        print("\n")
+        return ""
+
+    return LoadingPro
+
+
+
+def LoadingText(LoadingPro):
+    LoadingDic = {
+                     "│" : "╱", 
+                     "╱" : "──",
+                    "──" : '╲ ',
+                    '╲ ' : '│',
+                      "" : '│',
+                 }
+    LoadingPro = LoadingDic[LoadingPro]
+    sys.stdout.write("\033[F")
+    print("Loading: " + LoadingPro)
+    return LoadingPro
+
+
+def LoadingCir(LoadingPro):
+    LoadingDic = {
+                     "◜ " : " ◝", 
+                     " ◝" : " ◞",
+                    " ◞" : '◟ ',
+                    '◟ ' : '◜ ',
+                      "" : '◜ ',
+                 }
+    LoadingPro = LoadingDic[LoadingPro]
+    sys.stdout.write("\033[F")
+    print("Loading: " + LoadingPro)
+    return LoadingPro
+
+
+def LoadingCirFull(LoadingPro):
+    LoadingDic = {
+                     "◴" : "◷", 
+                     "◷" : "◶",
+                     "◶" : "◵",
+                     "◵" : "◴",
+                      "" : '◴',
+                 }
+    LoadingPro = LoadingDic[LoadingPro]
+    sys.stdout.write("\033[F")
+    print("Loading: " + LoadingPro)
+    return LoadingPro
+
+
+
+
+def LoadingCard(LoadingPro):
+
+    if LoadingPro == ""  or int(LoadingPro[0:6]) > 127150:
+        LoadingPro = "127137"
+
+    CardInt = int(LoadingPro[0:6])  
+
+    LoadingPro += chr(CardInt)
+
+    sys.stdout.write("\033[F")
+    
+    AfterNumb = LoadingPro[6 : len(LoadingPro)]
+
+    print("Loading: " + AfterNumb + "🂘🂘🂘🂘🂘🂘🂘🂘🂘🂘🂘🂘🂘🂘"[len(LoadingPro) - 6: 14])
+
+    LoadingPro = str(CardInt + 1) + AfterNumb 
+
+
+    return LoadingPro
+
+
+def LoadingDice(LoadingPro):
+
+    if LoadingPro == ""  or int(LoadingPro[0:4]) > 9861:
+        LoadingPro = "9856"
+
+    CardInt = int(LoadingPro[0:4])  
+
+    LoadingPro = str(CardInt + 1) + chr(CardInt)
+
+    sys.stdout.write("\033[F")
+    
+
+    print("Loading: " + LoadingPro[4:5])
+
+
+
+    return LoadingPro

@@ -20,7 +20,7 @@ it using a 3 by 3 Kernal and the number of input neurons sqare root should be 2 
 example is using 1 pool on an input of 784
 
     √784 = 28
-    28 - 2 - 26
+    28 - 2 = 26
     26² = 676
 
 your new number of input neurons is 676.
@@ -46,7 +46,7 @@ The BatchNumber is how many Inputs it will BackPropagate through until doing Bac
 The Learning Rate is how much each BackPropagation counts (Recommended : 0.10)
 
 
-After doing all that the Network should start working 
+After doing all that in the Network should start working 
 
 
 
