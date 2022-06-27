@@ -1,17 +1,28 @@
 import random
 import math
 import sys
-from turtle import update
+import json
+from tkinter.filedialog import Open
 
-
+class Setter():
+    def __init__(self):
+        NetWorkFrame = open("NetworkInfo.json", "r")
+        OpenFrame = json.load(NetWorkFrame)
+        NetWorkFrame.close()
+        self.Neurons = OpenFrame['Neurons']
+        exec('self.Activtions = ' + OpenFrame["Activtions"])
+        exec('self.CostFunction = ' + OpenFrame["CostFunction"])
+        self.Pooling = OpenFrame['Pooling']
+        self.Chunk = OpenFrame['Chunk']
+        exec('self.LoadingBar = ' + OpenFrame["LoadingBar"])
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
 class NeuralFrame:
-    
 
     def __init__(self, ParNeur, ParActi):
         self.NeurList = []
         self.ActivList = ParActi
+        self.ActivName = []
         self.CostFun = self.ActivList.pop(0)
         self.PoolNumb = 0
         self.ChunkNumb = 0
@@ -20,6 +31,10 @@ class NeuralFrame:
                 self.PoolNumb += 1
             else:
                 self.NeurList.append(ParNeur[i])
+
+        for i in range(len(ParActi)):
+            self.ActivName.append(ParActi[i].__name__)
+        self.ActivName = str(self.ActivName).replace("'", "")
 
         if self.PoolNumb > 0:
             self.ChunkNumb = int(math.sqrt(self.NeurList[-1]) + 2 * self.PoolNumb)
@@ -176,33 +191,37 @@ def GetFresh(LayLis):
     return(WFreash)
 
 
-#This is used to get text from a file
+#This is used to get text from a file 
+#Because 
 class TxtGetW():
     def __init__(self, FileNum):
-        NetWeTxt = open("WBL" + str(FileNum) + "/WeightsLay.txt", "r")
-        Content = NetWeTxt.read()
+        NetWeTxt = open("WBL" + str(FileNum) + "/WeightsLay.json", "r")
+        Content = json.load(NetWeTxt)
         NetWeTxt.close()
-        exec('self.Weights = ' + Content)
-
+        self.Weights = Content['Weights']
+        self.Bias = Content['Bias']
 
 #This gets the Weights from text file
 def GetTxT(LayLis):
     WFtxt = []
+    WBtxt = []
 
     for i in range(len(LayLis) - 1):
 
         FileNum = (len(LayLis) - 2) - i
-        FileWeights = TxtGetW(FileNum).Weights
+        FileRead = TxtGetW(FileNum)
+
+        FileWeights = FileRead.Weights
+        FileBias = FileRead.Bias
 
         WFtxt.append(FileWeights)
-    
+        WBtxt.append(FileBias)
 
-    return(WFtxt)
+    return((WFtxt, WBtxt))
 
 
 #Creates Weights in a text file
 def MakeTxT(Frame):
-
     LayLis = Frame.NeurList
 
     WFreash = []
@@ -219,43 +238,66 @@ def MakeTxT(Frame):
 
                     srtTofile[j].append(rand())
 
-            open("WBL" + str(FileNum) + "/WeightsLay.txt", "w").write(str(srtTofile))
-            open("WBL" + str(FileNum) + "/BiasLay.txt", "w").write("0.0")
+
+            NewData = json.loads('{"Weights": [], "Bias":0}')
+            NewData['Weights'] = srtTofile
+            OpenFile = open("WBL" + str(FileNum) + "/WeightsLay.json", "w")
+            json.dump(NewData, OpenFile)
+            OpenFile.close()
 
 
 
-    ActivatName = []
-    for i in range(len(Frame.ActivList)):
-            ActivatName.append(Frame.ActivList[i].__name__)
-    ActivatName = str(ActivatName).replace("'", "")
 
+    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0}')
+    SavedFrame['Neurons'] = Frame.NeurList
+    SavedFrame['Activtions'] = Frame.ActivName
+    SavedFrame['CostFunction'] = Frame.CostFun.__name__
+    SavedFrame['Pooling'] = Frame.PoolNumb
+    SavedFrame['Chunk'] = Frame.ChunkNumb
+    SavedFrame['LoadingBar'] = Frame.loadbar.__name__
+    OpenFile = open("NetworkInfo.json", "w")
+    json.dump(SavedFrame, OpenFile)
+    OpenFile.close()
 
-
-    ActivatName = "[" + Frame.CostFun.__name__  + ", " +  str(ActivatName[1:-1]) + "]"
-    DataSaved = str(LayLis) + "\n" + str(ActivatName)+ "\n" + str(Frame.ChunkNumb)
-    open("UseRequired.txt", "w").write(DataSaved)
 
     print("Previous data overwritten, New data inserted")
-
     return(WFreash)
 
 
 #Adds to Weights in the text file 
-def AddTxT(WeiLis, OGLay, DevBy):
-    Addto = GetTxT(OGLay)
+def AddTxT(NewLis, OldLays, DevBy):
+    WeiLis = NewLis[0]
+    BiaLis = NewLis[1]
+    OldWei = OldLays[0]
+    OldBia = OldLays[1]
+
+    NewWei = []
+    NewBia = []
     for i in range(len(WeiLis)):
 
         srtTofile = []
+        biaTofile = (OldBia[i] + (BiaLis[i] / DevBy))
         FileNum = (len(WeiLis) - 1) - i
 
         for j in range(len(WeiLis[i])):
             srtTofile.append([])
             for k in range(len(WeiLis[i][j])):
-                srtTofile[j].append(Addto[i][j][k] + (WeiLis[i][j][k] / DevBy))
+                srtTofile[j].append(OldWei[i][j][k] + (WeiLis[i][j][k] / DevBy))
 
 
-        open("WBL" + str(FileNum) + "/WeightsLay.txt", "w").write(str(srtTofile))
+        NewData = json.loads('{"Weights": [], "Bias":0}')
+        NewData['Weights'] = srtTofile
+        NewData['Bias'] = biaTofile
+        OpenFile = open("WBL" + str(FileNum) + "/WeightsLay.json", "w")
+        json.dump(NewData, OpenFile)
+        OpenFile.close()
 
+
+        NewWei.append(srtTofile)
+        NewBia.append(biaTofile)
+
+
+    return (NewWei, NewBia)
 
 #this gets the Bias from text file
 def GetBia(LayLis):

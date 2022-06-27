@@ -1,0 +1,1 @@
+{"Neurons": [10, 78, 676], "Activtions": "[Sigmoid, Sigmoid]", "CostFunction": "CalcCost", "Pooling": 1, "Chunk": 28, "LoadingBar": "LoadingBarPre"}

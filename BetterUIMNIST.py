@@ -14,21 +14,18 @@ DerivativeDic = {
 
 
 
-def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
+def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
-
+    Sert = Setter()
 
     BatchVal = abs(BatchValTrue)
-    MainList = Frame.NeurList
-    Activations = Frame.ActivList
-    CostFunction = Frame.CostFun
-    PoolNumb = Frame.PoolNumb
-    ChunkRate = Frame.ChunkNumb
+    MainList = Sert.Neurons
+    Activations = Sert.Activtions
+    CostFunction = Sert.CostFunction
+    PoolNumb = Sert.Pooling
+    ChunkRate = Sert.Chunk
     
     print("%")
-
-
-
 
 
 
@@ -42,13 +39,13 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchValTrue, Learn
         PreCor = 0
 
 
-        BiasLis = GetBia(MainList)
 
-
-        Weights = GetTxT(MainList)
+        Weights, BiasLis = GetTxT(MainList)
+        OldLayer = (Weights, BiasLis)
         Turned = []
         for i in Weights:
             Turned.append((np.array(i).T).tolist())
+
 
 
 
@@ -140,7 +137,7 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchValTrue, Learn
 
 
             if Numbers % BarMod < 1:
-                LoadingPro = Frame.loadbar(LoadingPro)
+                LoadingPro = Sert.LoadingBar(LoadingPro)
 
 
 
@@ -152,26 +149,24 @@ def NeuralNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchValTrue, Learn
 
         print("\n")
 
-        AddTxT(WeightsSummed, MainList, BatchValTrue)
+        OldLayer = AddTxT((WeightsSummed, BiasNew), OldLayer, BatchValTrue)
 
-        AddBia(BiasNew, MainList, BatchValTrue)
 
     print("Program ended, Training Complete")
 
 
 
-def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal):
+def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
 
+    Sert = Setter()
 
-
-    MainList = Frame.NeurList
-    Activations = Frame.ActivList
-    CostFunction = Frame.CostFun
-    PoolNumb = Frame.PoolNumb
-    ChunkRate = Frame.ChunkNumb
-    print("%")
-
+    BatchVal = abs(BatchValTrue)
+    MainList = Sert.Neurons
+    Activations = Sert.Activtions
+    CostFunction = Sert.CostFunction
+    PoolNumb = Sert.Pooling
+    ChunkRate = Sert.Chunk
 
 
     BarMod = BatchVal / 50
@@ -183,10 +178,8 @@ def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal):
         PreCor = 0
 
 
-        BiasLis = GetBia(MainList)
 
-
-        Weights = GetTxT(MainList)
+        Weights, BiasLis = GetTxT(MainList)
         Turned = []
         for i in Weights:
             Turned.append((np.array(i).T).tolist())
@@ -272,52 +265,20 @@ def TestingNetwork(Frame, InputData, ExpeOutput, TrainingVal, BatchVal):
 
 
 
-class Setter():
-    def __init__(self):
-        NetworkLis = open("UseRequired.txt", "r")
-        Content = NetworkLis.read()
-        NetworkLis.close()
-        VarLis = Content.split("\n")
-        exec('self.UI = ' + VarLis[0])
-        exec('self.Activa = ' + VarLis[1]) 
-        exec('self.ChunkRa = ' + VarLis[2])
 
 
 def UseNetwork(InputData):
 
     Sert = Setter()
 
-    UIList = Sert.UI
-    Activations = Sert.Activa
-    ChunkRate = Sert.ChunkRa
+    MainList = Sert.Neurons
+    Activations = Sert.Activtions
+    PoolNumb = Sert.Pooling
+    ChunkRate = Sert.Chunk
 
 
 
-
-    MainList = []
-    CostFunction = Activations.pop(0)
-
-    PoolNumb = 0
-
-    for i in range(len(UIList)):
-
-        if UIList[i] == "Pool":
-
-            PoolNumb += 1
-
-        else:
-
-            MainList.append(UIList[i])
-
-
-
-
-
-
-    BiasLis = GetBia(MainList)
-
-
-    Weights = GetTxT(MainList)
+    Weights, BiasLis = GetTxT(MainList)
     Turned = []
     for i in Weights:
         Turned.append((np.array(i).T).tolist())
@@ -359,4 +320,4 @@ def UseNetwork(InputData):
     Activations.reverse()
     
 
-    return np.argmax(Layers[0])
+    return Layers[0]
