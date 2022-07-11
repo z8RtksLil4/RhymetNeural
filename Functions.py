@@ -2,7 +2,7 @@ import random
 import math
 import sys
 import json
-from tkinter.filedialog import Open
+import numpy as np
 
 class Setter():
     def __init__(self):
@@ -15,6 +15,7 @@ class Setter():
         self.Pooling = OpenFrame['Pooling']
         self.Chunk = OpenFrame['Chunk']
         exec('self.LoadingBar = ' + OpenFrame["LoadingBar"])
+        exec('self.Filters = ' + OpenFrame["Filters"])
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
 class NeuralFrame:
@@ -40,11 +41,54 @@ class NeuralFrame:
             self.ChunkNumb = int(math.sqrt(self.NeurList[-1]) + 2 * self.PoolNumb)
 
         self.loadbar = LoadingBarPre
+        self.Filters = []
 
     def SetCusLoad(self, load):
         self.loadbar = load
         return self
 
+    def SetFilters(self, NewFilter):
+        self.Filters = NewFilter
+        return self
+
+
+
+def CombineGrids(GridList):
+    NewGrid = np.zeros((len(GridList[0]), len(GridList[0][0]))).tolist()
+
+    for l in range(len(GridList)): 
+
+        for i in range(len(GridList[0])): 
+
+            for j in range(len(GridList[0][0])): 
+
+                NewGrid[i][j] += GridList[l][i][j]
+
+    for i in range(len(GridList[0])): 
+        for j in range(len(GridList[0][0])): 
+            NewGrid[i][j] = NewGrid[i][j]/len(GridList)
+
+    return NewGrid
+
+def Convolution(Image, IMGfilter):
+    NewIMG = []
+    Image = Chunk(Image, int(math.sqrt(len(Image))))
+    Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
+
+    for i in range(1, len(Image) - 1):
+
+        NewRow = []
+        for j in range(1, len(Image[0]) - 1):
+            Total = 0
+
+            for r in range(-1,2):
+                for c in range(-1,2):
+                    Total += Image[i+r][j+c] * IMGfilter[r+1][c+1]
+
+            NewRow.append(abs(Total))
+        NewIMG.append(NewRow)
+        
+    return(NewIMG)
 
 #This is a Neural Network pool
 def PoolAry(Kw, Kh, Image):
@@ -152,7 +196,44 @@ def Tanh(x):
 def TanhDerv(y):
     return 1 - (pow(math.tanh(y), 2))
 
+#Swish Activation Function
+def Swish(x):
+    try:
+        return x * Sigmoid(x)
+    except OverflowError:
+        return 0
 
+#Swish Derivative Function
+def SwishDerv(y):
+    try:
+        return y * SigmoidDerv(y) + Sigmoid(y) #Swish(y) + Sigmoid(y) * (1-Swish(y))
+    except OverflowError:
+        return 0
+
+#Relu Activation Function
+def Relu(x):
+	return max(0.0, x)
+
+#Relu Derivative Function
+def ReluDerv(y):
+    return np.greater(y, 0.).astype(np.float32)
+
+#LeakyRelu Activation Function
+def LeakyRelu(x):
+	return max(x/4, x)
+
+#LeakyRelu Derivative Function
+def LeakyReluDerv(y):
+    return max(np.sign(y), 0.25)
+
+#Linear Activation Function
+def Linear(x):
+    return x
+
+#Linear Derivative Function
+def LinearDerv(y):
+    return 1
+    
 #Applies Activation Function to a list
 def ActivationList(x, Acti):
     newList = []
@@ -163,7 +244,7 @@ def ActivationList(x, Acti):
 
 #Random Float between -11 and 11
 def rand():
-    return random.randrange(-10, 10) + (random.randrange(-100, 100) / 100)
+    return random.uniform(-1, 1)   #randrange(-10, 10) + (random.randrange(-100, 100) / 100)
 
 
 
@@ -234,9 +315,10 @@ def MakeTxT(Frame):
             srtTofile = []
             for j in range(LayLis[i]):
                 srtTofile.append([])
+                sd = math.sqrt(2/LayLis[i + 1])
                 for k in range(LayLis[i + 1]):
 
-                    srtTofile[j].append(rand())
+                    srtTofile[j].append(rand())#np.random.normal(loc=0, scale=sd))
 
 
             NewData = json.loads('{"Weights": [], "Bias":0}')
@@ -248,13 +330,14 @@ def MakeTxT(Frame):
 
 
 
-    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0}')
+    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0 }')
     SavedFrame['Neurons'] = Frame.NeurList
     SavedFrame['Activtions'] = Frame.ActivName
     SavedFrame['CostFunction'] = Frame.CostFun.__name__
     SavedFrame['Pooling'] = Frame.PoolNumb
     SavedFrame['Chunk'] = Frame.ChunkNumb
     SavedFrame['LoadingBar'] = Frame.loadbar.__name__
+    SavedFrame['Filters'] = str(Frame.Filters)
     OpenFile = open("NetworkInfo.json", "w")
     json.dump(SavedFrame, OpenFile)
     OpenFile.close()

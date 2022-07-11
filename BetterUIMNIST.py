@@ -1,5 +1,4 @@
 
-import numpy as np
 import math
 from Functions import * 
 
@@ -9,8 +8,14 @@ from Functions import *
 
 DerivativeDic = { 
                     Sigmoid : SigmoidDerv,
-                    Tanh : TanhDerv
+                    Tanh : TanhDerv,
+                    Swish : SwishDerv,
+                    Linear : LinearDerv,
+                    Relu : ReluDerv,
+                    LeakyRelu : LeakyReluDerv
                 }
+
+
 
 
 
@@ -24,7 +29,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
     CostFunction = Sert.CostFunction
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
-    
+    Filters = Sert.Filters
     print("%")
 
 
@@ -65,6 +70,13 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
             input = InputData[CorNum]
+
+            if len(Filters) > 0:
+                Filtered = []
+                for Filter in Filters:
+                    Filtered.append(Convolution(input, Filter))
+                CombinedFilters = CombineGrids(Filtered)
+                input = UnChunk(CombinedFilters) 
 
             if ChunkRate > 0:
                 input = Chunk(input, ChunkRate)
@@ -167,7 +179,7 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
     CostFunction = Sert.CostFunction
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
-
+    Filters = Sert.Filters
 
     BarMod = BatchVal / 50
 
@@ -198,6 +210,14 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
 
             input = InputData[CorNum]
+
+            if len(Filters) > 0:
+                Filtered = []
+                for Filter in Filters:
+                    Filtered.append(Convolution(input, Filter))
+                CombinedFilters = CombineGrids(Filtered)
+                input = UnChunk(CombinedFilters) 
+
 
             if ChunkRate > 0:
                 input = Chunk(input, ChunkRate)
@@ -275,7 +295,7 @@ def UseNetwork(InputData):
     Activations = Sert.Activtions
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
-
+    Filters = Sert.Filters
 
 
     Weights, BiasLis = GetTxT(MainList)
@@ -288,6 +308,13 @@ def UseNetwork(InputData):
 
 
     input = InputData
+            
+    if len(Filters) > 0:
+        Filtered = []
+        for Filter in Filters:
+            Filtered.append(Convolution(input, Filter))
+        CombinedFilters = CombineGrids(Filtered)
+        input = UnChunk(CombinedFilters) 
 
     if ChunkRate > 0:
         input = Chunk(input, ChunkRate)
