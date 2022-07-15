@@ -52,13 +52,12 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             Turned.append((np.array(i).T).tolist())
 
 
-
-
         Cost = 100
 
         BiasNew = FreshBi(BiasLis)
 
         WeightsSummed = GetFresh(MainList)
+
 
         LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
         LoadingPro = ""
@@ -89,59 +88,99 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
 
-            Turned = []
-            for i in Weights:
-                Turned.append((np.array(i).T).tolist())
+
+
 
             Turned.reverse()
             BiasLis.reverse()
             Activations.reverse()
+            MainList.reverse()
 
             Layers = [input]
             LayN = input
             #This is using the network itself
-            for i in range(len(Turned)):
-                Layers.append((np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[i]).tolist()), Activations[i])) + BiasLis[i]).tolist())
-                LayN = Layers[i + 1]
+            CurInd = 0
+
+
+            curact = []
+            for Act in Activations:
+                if Act != "Pool":
+                    curact.append(Act)
+
+            bhuinijmk = False
+            while (CurInd < len(Turned)):
+
+
+                try:
+                    LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), curact[CurInd])) + BiasLis[CurInd]).tolist()
+                    Layers.append(LayN)
+                    CurInd += 1
+                except:
+                    ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                    ChunkedData = PoolAry(2, 2, ChunkedData)
+                    LayN = UnChunk(ChunkedData)
+                    Layers.append(UnChunk(ChunkedData))
+
+
+
 
             Turned.reverse()
             BiasLis.reverse()
             Layers.reverse()
             Activations.reverse()
-
+            MainList.reverse()
 
             CosLis = CostFunction(Expected, Layers[0])
 
 
-            Cost = RealCalcCost(Expected, Layers[0])
+
 
 
             prevcalc = CosLis
             
-
-            for l in range(len(Layers) - 1): #Going Through the Layers
-            
-
-                TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist() 
-
-                for n in range(len(Layers[l])): #Going Through the Neurons
+            l = 0
 
 
-                    LayBackPro = (DerivativeDic[Activations[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
+            curMainList = []
+            for Act in MainList:
+                curMainList.append(Act)
 
-                    BiasNew[l] += LearnRate * float(1 * LayBackPro)
+            while l < (len(Layers) - 1): #Going Through the Layers
+                    if(curMainList[l] == "P"):
+                        LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
 
-                    for w in range(len(Weights[l][n])): #Going Through the Weights
+                        for i in range(len(prevcalc)):
+                            prevcalc[i] = SumCheck(prevcalc[i])
+
+                        LayAf = PoolBackProp(2, 2, LayAf, prevcalc)
+                        prevcalc = UnChunk(LayAf)
+                        curMainList.pop(l)
+                        Layers.pop(l)
+
+                    else:
+
+                        TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist() 
 
 
-                        #LearnRate * (Neuronᴸ⁺¹[w] * Activation′(Neuronⁿ) * (sum(Turnedᴸ⁻¹[n]) or CostFunction(E, R)))
-                        WeightsSummed[l][n][w] += LearnRate * float(Layers[l + 1][w] * LayBackPro)
 
-                        TimCal[w][n] = float(Turned[l][w][n] * LayBackPro)
+                        for n in range(len(Layers[l])): #Going Through the Neurons
+                            
+                            LayBackPro = (DerivativeDic[curact[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
+
+                            BiasNew[l] += LearnRate * float(1 * LayBackPro)
+
+                            for w in range(len(Weights[l][n])): #Going Through the Weights
 
 
-                prevcalc = TimCal
+                                #LearnRate * (Neuronᴸ⁺¹[w] * Activation′(Neuronⁿ) * (sum(Turnedᴸ⁻¹[n]) or CostFunction(E, R)))
+                                WeightsSummed[l][n][w] += LearnRate * float(Layers[l + 1][w] * LayBackPro)
 
+                                TimCal[w][n] = float(Turned[l][w][n] * LayBackPro)
+
+
+                        prevcalc = TimCal
+                        l += 1
+                    
             AIaws = FindMax(Layers[0])
             RLaws = FindMax(Expected)
             if AIaws == RLaws:

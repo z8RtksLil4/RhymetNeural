@@ -21,24 +21,22 @@ class Setter():
 class NeuralFrame:
 
     def __init__(self, ParNeur, ParActi):
-        self.NeurList = []
+        self.NeurList = ParNeur
         self.ActivList = ParActi
         self.ActivName = []
         self.CostFun = self.ActivList.pop(0)
         self.PoolNumb = 0
         self.ChunkNumb = 0
-        for i in range(len(ParNeur)):
-            if ParNeur[i] == "Pool":
-                self.PoolNumb += 1
-            else:
-                self.NeurList.append(ParNeur[i])
+
 
         for i in range(len(ParActi)):
-            self.ActivName.append(ParActi[i].__name__)
-        self.ActivName = str(self.ActivName).replace("'", "")
+            try:
+                self.ActivName.append(ParActi[i].__name__)
+            except:
+                self.ActivName.append(ParActi[i])
+        self.ActivName = str(self.ActivName).replace("'", "").replace("Pool", "'Pool'")
 
-        if self.PoolNumb > 0:
-            self.ChunkNumb = int(math.sqrt(self.NeurList[-1]) + 2 * self.PoolNumb)
+
 
         self.loadbar = LoadingBarPre
         self.Filters = []
@@ -51,6 +49,44 @@ class NeuralFrame:
         self.Filters = NewFilter
         return self
 
+def trnnp(lisdt):
+    newlist = np.zeros((len(lisdt[0]), len(lisdt)))
+    for i in range(len(lisdt)):
+        for j in range(len(lisdt[0])):
+            newlist[j][i] = lisdt[i][j]
+    return newlist
+
+def PoolBackProp(Kw, Kh, Image, PrevGradient):
+    NewGrad = np.zeros((len(Image[0]),len(Image[0]))).tolist()
+
+    PrevGradInd = 0
+    NewImage = []
+
+    for i in range(len(Image) - (Kh - 1)):
+
+        NewRow = []
+        
+        for j in range(len(Image[0]) - (Kw - 1)):
+
+
+            
+            if (i + Kh) <= len(Image) and (j + Kw) <= len(Image[0]):
+
+                max = Image[i][j]
+                maxpos = (i,j)
+                for r in range(Kh):
+                    for c in range(Kw):
+                        if Image[i + r][j + c] > max:
+                            max = Image[i + r][j + c]
+                            maxpos = (i + r, j + c)
+
+                NewGrad[maxpos[0]][maxpos[1]] += PrevGradient[PrevGradInd]
+                PrevGradInd += 1
+                #NewRow.append(max)
+
+        #NewImage.append(NewRow)
+
+    return (NewGrad)
 
 
 def CombineGrids(GridList):
@@ -96,7 +132,7 @@ def PoolAry(Kw, Kh, Image):
     for i in range(len(Image) - (Kh - 1)):
 
         NewRow = []
-        
+        #print(len(Image))
         for j in range(len(Image[0]) - (Kw - 1)):
 
 
@@ -237,6 +273,7 @@ def LinearDerv(y):
 #Applies Activation Function to a list
 def ActivationList(x, Acti):
     newList = []
+
     for i in x:
         newList.append(Acti(i))
     return newList
@@ -254,18 +291,34 @@ def ConvFloatList(listparam):
 
 
 #This creates a Fresh List for Weights
-def GetFresh(LayLis):
+def GetFresh(eferf):
+    LayLis = []
+    for bghjnkl in eferf:
+        LayLis.append(bghjnkl)
     
     WFreash = []
     for i in range(len(LayLis)):
         l1 = []
         try:
-            for j in range(LayLis[i]):
-                l2 = []
-                for k in range(LayLis[i + 1]):
-                    l2.append(0)
-                l1.append(l2)
-            WFreash.append(l1)
+
+            if(LayLis[i+1] != "P"):
+                for j in range(LayLis[i]):
+                    l2 = []
+                    for k in range(LayLis[i + 1]):
+                        l2.append(0)
+                    l1.append(l2)
+                WFreash.append(l1)
+            else:
+                addtopool = 2
+                while LayLis[i + addtopool] == "P":
+                    addtopool += 1
+                for j in range(LayLis[i]):
+                    l2 = []
+                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
+                        l2.append(0)
+                    l1.append(l2)
+                WFreash.append(l1)
+                LayLis.pop(i+1)
         except:
             break
 
@@ -286,12 +339,18 @@ class TxtGetW():
 def GetTxT(LayLis):
     WFtxt = []
     WBtxt = []
+    RemLis = []
 
-    for i in range(len(LayLis) - 1):
+    for ints in LayLis:
+        if ints != "P":
+            RemLis.append(ints)
 
-        FileNum = (len(LayLis) - 2) - i
+
+    for i in range(len(RemLis) - 1):
+
+        FileNum = (len(RemLis) - 2) - i
         FileRead = TxtGetW(FileNum)
-
+    
         FileWeights = FileRead.Weights
         FileBias = FileRead.Bias
 
@@ -304,23 +363,49 @@ def GetTxT(LayLis):
 #Creates Weights in a text file
 def MakeTxT(Frame):
     LayLis = Frame.NeurList
-
+    CopyLis = []
     WFreash = []
+    Oglen = len(LayLis)
+
+    for ints in LayLis:
+        if ints == "P":
+            Oglen -= 1
+        CopyLis.append(ints)
 
     for i in range(len(LayLis) - 1):
             
-        FileNum = (len(LayLis) - 2) - i
+        FileNum = (Oglen - 2) - i
 
         if FileNum > -1:
+
             srtTofile = []
+            print(i)
             for j in range(LayLis[i]):
-                srtTofile.append([])
-                sd = math.sqrt(2/LayLis[i + 1])
-                for k in range(LayLis[i + 1]):
 
-                    srtTofile[j].append(rand())#np.random.normal(loc=0, scale=sd))
+                if LayLis[i+1] == "P":
 
+                    srtTofile.append([])
+                    addtopool = 2
+                    while LayLis[i + addtopool] == "P":
+                        #print(i + addtopool)
+                        addtopool += 1
+                        
 
+                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
+
+                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
+                    #LayLis.pop(i+1)
+                else:
+
+                    srtTofile.append([])
+                    for k in range(LayLis[i + 1]):
+
+                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
+            if LayLis[i+1] == "P":
+                    LayLis.pop(i+1)
+            """print(len(srtTofile))
+            print(len(srtTofile[6]))
+            print((FileNum))"""
             NewData = json.loads('{"Weights": [], "Bias":0}')
             NewData['Weights'] = srtTofile
             OpenFile = open("WBL" + str(FileNum) + "/WeightsLay.json", "w")
@@ -331,7 +416,7 @@ def MakeTxT(Frame):
 
 
     SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0 }')
-    SavedFrame['Neurons'] = Frame.NeurList
+    SavedFrame['Neurons'] = CopyLis
     SavedFrame['Activtions'] = Frame.ActivName
     SavedFrame['CostFunction'] = Frame.CostFun.__name__
     SavedFrame['Pooling'] = Frame.PoolNumb
