@@ -318,7 +318,8 @@ def GetFresh(eferf):
                         l2.append(0)
                     l1.append(l2)
                 WFreash.append(l1)
-                LayLis.pop(i+1)
+                while LayLis[i + 1] == "P":
+                    LayLis.pop(i+1)
         except:
             break
 
@@ -372,14 +373,14 @@ def MakeTxT(Frame):
             Oglen -= 1
         CopyLis.append(ints)
 
+
     for i in range(len(LayLis) - 1):
-            
+        
         FileNum = (Oglen - 2) - i
 
         if FileNum > -1:
 
             srtTofile = []
-            print(i)
             for j in range(LayLis[i]):
 
                 if LayLis[i+1] == "P":
@@ -387,10 +388,9 @@ def MakeTxT(Frame):
                     srtTofile.append([])
                     addtopool = 2
                     while LayLis[i + addtopool] == "P":
-                        #print(i + addtopool)
                         addtopool += 1
-                        
-
+                    
+    
                     for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
 
                         srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
@@ -401,8 +401,9 @@ def MakeTxT(Frame):
                     for k in range(LayLis[i + 1]):
 
                         srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
-            if LayLis[i+1] == "P":
-                    LayLis.pop(i+1)
+
+            while LayLis[i + 1] == "P":
+                LayLis.pop(i+1)
             """print(len(srtTofile))
             print(len(srtTofile[6]))
             print((FileNum))"""

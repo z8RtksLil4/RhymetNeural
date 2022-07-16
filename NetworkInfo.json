@@ -1,1 +1,1 @@
-{"Neurons": [10, "P", 81, "P", "P", 784], "Activtions": "['Pool', 'Pool', Sigmoid, 'Pool', 'Pool', Sigmoid]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]"}
+{"Neurons": [10, "P", "P", 81, "P", "P", 784], "Activtions": "['Pool', 'Pool', Sigmoid, 'Pool', 'Pool', Sigmoid]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]"}
