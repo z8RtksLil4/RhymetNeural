@@ -10,8 +10,8 @@ images, labels = mndata.load_training()
 InputData = images
 
 
-NNFrame = NeuralFrame([10, "P", "P", 81, "P", "P", 784], [CalcCost,"Pool", "Pool", Sigmoid, "Pool", "Pool", Sigmoid])
-MakeTxT(NNFrame)
+NNFrame = NeuralFrame([10, 30, 30, 784], [CalcCost, Sigmoid, Sigmoid, Sigmoid])
+#MakeTxT(NNFrame)
 
 OutputData = []
 for Numb in labels:

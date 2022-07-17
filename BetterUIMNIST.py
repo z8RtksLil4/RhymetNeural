@@ -1,6 +1,7 @@
 
 import math
 from Functions import * 
+import copy
 
 
 
@@ -31,6 +32,14 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
     ChunkRate = Sert.Chunk
     Filters = Sert.Filters
     print("%")
+
+
+
+    BarMod = BatchVal / 50
+    curact = []
+    for Act in Sert.Activtions:
+        if type(Act) != str:
+            curact.append(Act)
 
 
 
@@ -102,24 +111,20 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             CurInd = 0
 
 
-            curact = []
-            for Act in Activations:
-                if Act != "Pool":
-                    curact.append(Act)
+            curMainList = copy.deepcopy(MainList)
 
-            bhuinijmk = False
             while (CurInd < len(Turned)):
-
-
-                try:
-                    LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), curact[CurInd])) + BiasLis[CurInd]).tolist()
-                    Layers.append(LayN)
-                    CurInd += 1
-                except:
+                while curMainList[CurInd + 1] == "P":
                     ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
                     ChunkedData = PoolAry(2, 2, ChunkedData)
                     LayN = UnChunk(ChunkedData)
                     Layers.append(UnChunk(ChunkedData))
+                    curMainList.pop(CurInd+1)
+
+
+                LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), curact[CurInd])) + BiasLis[CurInd]).tolist()
+                Layers.append(LayN)
+                CurInd += 1
 
 
 
@@ -141,9 +146,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             l = 0
 
 
-            curMainList = []
-            for Act in MainList:
-                curMainList.append(Act)
+            curMainList = copy.deepcopy(MainList)
 
             while l < (len(Layers) - 1): #Going Through the Layers
                     if(curMainList[l] == "P"):
