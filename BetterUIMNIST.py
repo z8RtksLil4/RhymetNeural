@@ -26,7 +26,6 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
     BatchVal = abs(BatchValTrue)
     MainList = Sert.Neurons
-    Activations = Sert.Activtions
     CostFunction = Sert.CostFunction
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
@@ -36,10 +35,10 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
     BarMod = BatchVal / 50
-    curact = []
+    Activations = []
     for Act in Sert.Activtions:
         if type(Act) != str:
-            curact.append(Act)
+            Activations.append(Act)
 
 
 
@@ -109,8 +108,6 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             LayN = input
             #This is using the network itself
             CurInd = 0
-
-
             curMainList = copy.deepcopy(MainList)
 
             while (CurInd < len(Turned)):
@@ -122,10 +119,9 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                     curMainList.pop(CurInd+1)
 
 
-                LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), curact[CurInd])) + BiasLis[CurInd]).tolist()
+                LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
                 Layers.append(LayN)
                 CurInd += 1
-
 
 
 
@@ -168,7 +164,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
                         for n in range(len(Layers[l])): #Going Through the Neurons
                             
-                            LayBackPro = (DerivativeDic[curact[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
+                            LayBackPro = (DerivativeDic[Activations[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
 
                             BiasNew[l] += LearnRate * float(1 * LayBackPro)
 
@@ -217,7 +213,6 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
     BatchVal = abs(BatchValTrue)
     MainList = Sert.Neurons
-    Activations = Sert.Activtions
     CostFunction = Sert.CostFunction
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
@@ -225,7 +220,10 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
     BarMod = BatchVal / 50
 
-
+    Activations = []
+    for Act in Sert.Activtions:
+        if type(Act) != str:
+            Activations.append(Act)
     for MNnum in range(TrainingVal):
 
 
@@ -280,11 +278,26 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
             BiasLis.reverse()
             Activations.reverse()
 
+
             Layers = [input]
             LayN = input
-            for i in range(len(Turned)):
-                Layers.append((np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[i]).tolist()), Activations[i])) + BiasLis[i]).tolist())
-                LayN = Layers[i + 1]
+            CurInd = 0
+            curMainList = copy.deepcopy(MainList)
+
+
+            while (CurInd < len(Turned)):
+                while curMainList[CurInd + 1] == "P":
+                    ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                    ChunkedData = PoolAry(2, 2, ChunkedData)
+                    LayN = UnChunk(ChunkedData)
+                    Layers.append(UnChunk(ChunkedData))
+                    curMainList.pop(CurInd+1)
+
+
+                LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
+                Layers.append(LayN)
+                CurInd += 1
+
 
             Turned.reverse()
             BiasLis.reverse()
@@ -334,11 +347,14 @@ def UseNetwork(InputData):
     Sert = Setter()
 
     MainList = Sert.Neurons
-    Activations = Sert.Activtions
     PoolNumb = Sert.Pooling
     ChunkRate = Sert.Chunk
     Filters = Sert.Filters
 
+    Activations = []
+    for Act in Sert.Activtions:
+        if type(Act) != str:
+            Activations.append(Act)
 
     Weights, BiasLis = GetTxT(MainList)
     Turned = []
@@ -379,9 +395,24 @@ def UseNetwork(InputData):
 
     Layers = [input]
     LayN = input
-    for i in range(len(Turned)):
-        Layers.append((np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[i]).tolist()), Activations[i])) + BiasLis[i]).tolist())
-        LayN = Layers[i + 1]
+
+
+    CurInd = 0
+    curMainList = copy.deepcopy(MainList)
+
+    while (CurInd < len(Turned)):
+        while curMainList[CurInd + 1] == "P":
+            ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+            ChunkedData = PoolAry(2, 2, ChunkedData)
+            LayN = UnChunk(ChunkedData)
+            Layers.append(UnChunk(ChunkedData))
+            curMainList.pop(CurInd+1)
+
+
+        LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
+        Layers.append(LayN)
+        CurInd += 1
+
 
     Turned.reverse()
     BiasLis.reverse()

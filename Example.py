@@ -10,7 +10,7 @@ images, labels = mndata.load_training()
 InputData = images
 
 
-NNFrame = NeuralFrame([10, 30, 30, 784], [CalcCost, Sigmoid, Sigmoid, Sigmoid])
+NNFrame = NeuralFrame([10, 80, "P", 784], [CalcCost, Sigmoid, Sigmoid])
 #MakeTxT(NNFrame)
 
 OutputData = []
@@ -19,7 +19,8 @@ for Numb in labels:
     
 
 
-NeuralNetwork(InputData[0:48000], OutputData[0:48000], 480, 100, 0.06)
+NeuralNetwork(InputData[0:48000], OutputData[0:48000], 480, 100, 0.045)
 #TestingNetwork(InputData[0:48000], OutputData[0:48000], 480, 100)
-#print(labels[2])
-#print(np.argmax(UseNetwork(InputData[2])))
+#print(np.argmax(UseNetwork(InputData[5535])))
+#print(np.argmax(OutputData[5535]))
+

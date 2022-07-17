@@ -393,7 +393,7 @@ def MakeTxT(Frame):
     
                     for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
 
-                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
+                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
                     #LayLis.pop(i+1)
                 else:
 
