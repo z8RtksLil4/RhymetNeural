@@ -78,18 +78,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
             input = InputData[CorNum]
 
-            if len(Filters) > 0:
-                Filtered = []
-                for Filter in Filters:
-                    Filtered.append(Convolution(input, Filter))
-                CombinedFilters = CombineGrids(Filtered)
-                input = UnChunk(CombinedFilters) 
 
-            if ChunkRate > 0:
-                input = Chunk(input, ChunkRate)
-                for i in range(PoolNumb):
-                    input = PoolAry(3, 3, input)
-                input = UnChunk(input) 
 
 
             Expected = ExpeOutput[CorNum]
@@ -110,14 +99,30 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             CurInd = 0
             curMainList = copy.deepcopy(MainList)
 
+            FiltInt = 0
             while (CurInd < len(Turned)):
-                while curMainList[CurInd + 1] == "P":
-                    ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-                    ChunkedData = PoolAry(2, 2, ChunkedData)
-                    LayN = UnChunk(ChunkedData)
-                    Layers.append(UnChunk(ChunkedData))
-                    curMainList.pop(CurInd+1)
 
+                while type(curMainList[CurInd + 1]) == str:
+
+                    while curMainList[CurInd + 1] == "P":
+
+                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                        ChunkedData = PoolAry(2, 2, ChunkedData)
+                        LayN = UnChunk(ChunkedData)
+                        Layers.append(UnChunk(ChunkedData))
+                        curMainList.pop(CurInd+1)
+
+                    while curMainList[CurInd + 1] == "C":
+                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+
+                        Filtered = []
+                        for Filter in Filters[FiltInt]:
+                            Filtered.append(Convolution(LayN, Filter))
+                        CombinedFilters = CombineGrids(Filtered)
+                        LayN = UnChunk(CombinedFilters) 
+                        Layers.append(UnChunk(CombinedFilters))
+                        curMainList.pop(CurInd+1)
+                        FiltInt += 1
 
                 LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
                 Layers.append(LayN)
@@ -143,7 +148,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
             curMainList = copy.deepcopy(MainList)
-
+            FiltInt = 0
             while l < (len(Layers) - 1): #Going Through the Layers
                     if(curMainList[l] == "P"):
                         LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
@@ -155,6 +160,24 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         prevcalc = UnChunk(LayAf)
                         curMainList.pop(l)
                         Layers.pop(l)
+
+                    elif(curMainList[l] == "C"):
+                        LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
+                    
+                        for i in range(len(prevcalc)):
+                            prevcalc[i] = SumCheck(prevcalc[i])
+                        Filtered = []
+
+                        NewFilter = CombineGrids(Filters[FiltInt])
+                        #Im not sure this works correctly, Come back to this
+
+                        #Filtered.append(ConvolutionBackProp(LayAf, Filter, prevcalc))
+
+                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
+                        prevcalc = UnChunk(LayAf)
+                        curMainList.pop(l)
+                        Layers.pop(l)
+                        FiltInt += 1
 
                     else:
 

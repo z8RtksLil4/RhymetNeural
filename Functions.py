@@ -109,7 +109,7 @@ def CombineGrids(GridList):
 def Convolution(Image, IMGfilter):
     NewIMG = []
     Image = Chunk(Image, int(math.sqrt(len(Image))))
-    Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
+    #Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
 
     for i in range(1, len(Image) - 1):
 
@@ -123,6 +123,33 @@ def Convolution(Image, IMGfilter):
 
             NewRow.append(abs(Total))
         NewIMG.append(NewRow)
+        
+    return(NewIMG)
+
+
+def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
+    NewIMG = np.zeros((len(Image),len(Image))).tolist()
+    PrevGradInd = 0
+
+    for i in range(0, len(NewIMG)-2):
+
+        for j in range(0, len(NewIMG[0])-2):
+            Total = 0
+
+            """            for q in range(len(IMGfilter)):
+                        for r in range(3):
+                            for c in range(3):
+                                NewIMG[i+r][j+c] += IMGfilter[q][r][c] 
+            """
+            for r in range(3):
+                for c in range(3):
+                    NewIMG[i+r][j+c] = IMGfilter[r][c] * PrevGradient[PrevGradInd]
+
+
+            PrevGradInd += 1
+
+
+
         
     return(NewIMG)
 
@@ -301,7 +328,7 @@ def GetFresh(eferf):
         l1 = []
         try:
 
-            if(LayLis[i+1] != "P"):
+            if(type(LayLis[i+1]) != str):
                 for j in range(LayLis[i]):
                     l2 = []
                     for k in range(LayLis[i + 1]):
@@ -309,17 +336,56 @@ def GetFresh(eferf):
                     l1.append(l2)
                 WFreash.append(l1)
             else:
+
                 addtopool = 2
-                while LayLis[i + addtopool] == "P":
+                ext = 2
+                if LayLis[i + 1] != "P":
+                    ext = 3
+
+                while type(LayLis[i + addtopool]) == str:
+
+                    if LayLis[i + addtopool] == "P":
+                        ext += 1
+                    else:
+                        ext += 2
+
                     addtopool += 1
+
                 for j in range(LayLis[i]):
                     l2 = []
-                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
+                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
                         l2.append(0)
                     l1.append(l2)
                 WFreash.append(l1)
-                while LayLis[i + 1] == "P":
+                while type(LayLis[i + 1]) == str:
                     LayLis.pop(i+1)
+
+                """match LayLis[i+1]:
+                    case "P":
+                        addtopool = 2
+                        while LayLis[i + addtopool] == "P":
+                            addtopool += 1
+                        for j in range(LayLis[i]):
+                            l2 = []
+                            for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
+                                l2.append(0)
+                            l1.append(l2)
+                        WFreash.append(l1)
+                        while LayLis[i + 1] == "P":
+                            LayLis.pop(i+1)
+
+                    case "C":
+                        addtopool = 2
+                        while LayLis[i + addtopool] == "C":
+                            addtopool += 1
+                        for j in range(LayLis[i]):
+                            l2 = []
+                            for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-((addtopool-1)*2), 2))):
+                                l2.append(0)
+                            l1.append(l2)
+                        WFreash.append(l1)
+                        while LayLis[i + 1] == "C":
+                            LayLis.pop(i+1)"""
         except:
             break
 
@@ -343,7 +409,7 @@ def GetTxT(LayLis):
     RemLis = []
 
     for ints in LayLis:
-        if ints != "P":
+        if type(ints) != str:
             RemLis.append(ints)
 
 
@@ -369,41 +435,70 @@ def MakeTxT(Frame):
     Oglen = len(LayLis)
 
     for ints in LayLis:
-        if ints == "P":
+        if type(ints) == str:
             Oglen -= 1
         CopyLis.append(ints)
 
 
     for i in range(len(LayLis) - 1):
+    #while (i < len(LayLis) - 1):
         
         FileNum = (Oglen - 2) - i
 
         if FileNum > -1:
 
-            srtTofile = []
-            for j in range(LayLis[i]):
+            if type(LayLis[i+1]) == str:
+                srtTofile = []
+                for j in range(LayLis[i]):
 
-                if LayLis[i+1] == "P":
+                    if type(LayLis[i+1]) == str:
 
-                    srtTofile.append([])
-                    addtopool = 2
-                    while LayLis[i + addtopool] == "P":
-                        addtopool += 1
-                    
-    
-                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2))):
+                        srtTofile.append([])
+                        addtopool = 2
+                        ext = 2
+                        if LayLis[i + 1] != "P":
+                            ext = 3
 
-                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
-                    #LayLis.pop(i+1)
-                else:
+                        while type(LayLis[i + addtopool]) == str:
 
+                            if LayLis[i + addtopool] == "P":
+                                ext += 1
+                            else:
+                                ext += 2
+
+                            addtopool += 1
+        
+                        for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
+
+                            srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
+                        #LayLis.pop(i+1)
+                        """case "C":
+                        srtTofile.append([])
+                        addtopool = 2
+                        while LayLis[i + addtopool] == "C":
+                            addtopool += 1
+        
+                        for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-((addtopool-1)*2), 2))):
+
+                            srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
+                        #LayLis.pop(i+1)"""
+                while type(LayLis[i + 1]) == str:
+                    LayLis.pop(i+1)
+
+            else:
+                srtTofile = []
+                for j in range(LayLis[i]):
                     srtTofile.append([])
                     for k in range(LayLis[i + 1]):
 
                         srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
 
-            while LayLis[i + 1] == "P":
+            """while LayLis[i + 1] == "P":
                 LayLis.pop(i+1)
+            #Okay so this is going to cause an error if pools and convos are both used
+            while LayLis[i + 1] == "C":
+                LayLis.pop(i+1)"""
+
             """print(len(srtTofile))
             print(len(srtTofile[6]))
             print((FileNum))"""
