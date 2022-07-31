@@ -119,6 +119,7 @@ def Convolution(Image, IMGfilter):
 
             for r in range(-1,2):
                 for c in range(-1,2):
+
                     Total += Image[i+r][j+c] * IMGfilter[r+1][c+1]
 
             NewRow.append(abs(Total))

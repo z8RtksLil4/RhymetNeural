@@ -274,20 +274,6 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
             input = InputData[CorNum]
 
-            if len(Filters) > 0:
-                Filtered = []
-                for Filter in Filters:
-                    Filtered.append(Convolution(input, Filter))
-                CombinedFilters = CombineGrids(Filtered)
-                input = UnChunk(CombinedFilters) 
-
-
-            if ChunkRate > 0:
-                input = Chunk(input, ChunkRate)
-                for i in range(PoolNumb):
-                    input = PoolAry(3, 3, input)
-                input = UnChunk(input) 
-
 
             Expected = ExpeOutput[CorNum]
 
@@ -300,7 +286,7 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
             Turned.reverse()
             BiasLis.reverse()
             Activations.reverse()
-
+            MainList.reverse()
 
             Layers = [input]
             LayN = input
@@ -308,14 +294,30 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
             curMainList = copy.deepcopy(MainList)
 
 
+            FiltInt = 0
             while (CurInd < len(Turned)):
-                while curMainList[CurInd + 1] == "P":
-                    ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-                    ChunkedData = PoolAry(2, 2, ChunkedData)
-                    LayN = UnChunk(ChunkedData)
-                    Layers.append(UnChunk(ChunkedData))
-                    curMainList.pop(CurInd+1)
 
+                while type(curMainList[CurInd + 1]) == str:
+
+                    while curMainList[CurInd + 1] == "P":
+
+                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                        ChunkedData = PoolAry(2, 2, ChunkedData)
+                        LayN = UnChunk(ChunkedData)
+                        Layers.append(UnChunk(ChunkedData))
+                        curMainList.pop(CurInd+1)
+
+                    while curMainList[CurInd + 1] == "C":
+                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+
+                        Filtered = []
+                        for Filter in Filters[FiltInt]:
+                            Filtered.append(Convolution(LayN, Filter))
+                        CombinedFilters = CombineGrids(Filtered)
+                        LayN = UnChunk(CombinedFilters) 
+                        Layers.append(UnChunk(CombinedFilters))
+                        curMainList.pop(CurInd+1)
+                        FiltInt += 1
 
                 LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
                 Layers.append(LayN)
@@ -326,6 +328,7 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
             BiasLis.reverse()
             Layers.reverse()
             Activations.reverse()
+            MainList.reverse()
 
 
             CosLis = CostFunction(Expected, Layers[0])
@@ -390,21 +393,6 @@ def UseNetwork(InputData):
 
     input = InputData
             
-    if len(Filters) > 0:
-        Filtered = []
-        for Filter in Filters:
-            Filtered.append(Convolution(input, Filter))
-        CombinedFilters = CombineGrids(Filtered)
-        input = UnChunk(CombinedFilters) 
-
-    if ChunkRate > 0:
-        input = Chunk(input, ChunkRate)
-        for i in range(PoolNumb):
-            input = PoolAry(3, 3, input)
-        input = UnChunk(input) 
-
-
-
 
 
 
@@ -415,7 +403,7 @@ def UseNetwork(InputData):
     Turned.reverse()
     BiasLis.reverse()
     Activations.reverse()
-
+    MainList.reverse()
     Layers = [input]
     LayN = input
 
@@ -423,14 +411,31 @@ def UseNetwork(InputData):
     CurInd = 0
     curMainList = copy.deepcopy(MainList)
 
+    FiltInt = 0
     while (CurInd < len(Turned)):
-        while curMainList[CurInd + 1] == "P":
-            ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-            ChunkedData = PoolAry(2, 2, ChunkedData)
-            LayN = UnChunk(ChunkedData)
-            Layers.append(UnChunk(ChunkedData))
-            curMainList.pop(CurInd+1)
 
+        while type(curMainList[CurInd + 1]) == str:
+
+            while curMainList[CurInd + 1] == "P":
+
+                ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                ChunkedData = PoolAry(2, 2, ChunkedData)
+                LayN = UnChunk(ChunkedData)
+                Layers.append(UnChunk(ChunkedData))
+                curMainList.pop(CurInd+1)
+
+            while curMainList[CurInd + 1] == "C":
+                ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+
+                Filtered = []
+                for Filter in Filters[FiltInt]:
+                    Filtered.append(Convolution(LayN, Filter))
+
+                CombinedFilters = CombineGrids(Filtered)
+                LayN = UnChunk(CombinedFilters) 
+                Layers.append(UnChunk(CombinedFilters))
+                curMainList.pop(CurInd+1)
+                FiltInt += 1
 
         LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
         Layers.append(LayN)
@@ -441,6 +446,6 @@ def UseNetwork(InputData):
     BiasLis.reverse()
     Layers.reverse()
     Activations.reverse()
-    
+    MainList.reverse()
 
     return Layers[0]

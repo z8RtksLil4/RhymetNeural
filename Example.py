@@ -12,26 +12,14 @@ InputData = images
 
 Filt =  [
           [
-           [[-1, 2,-1],
-            [-1, 2,-1],     
-            [-1, 2,-1]],
-
-           [[-1,-1, 2],
-            [-1, 2,-1],     
-            [ 2,-1,-1]],
-
-           [[ 2,-1,-1],
-            [-1, 2,-1],     
-            [-1,-1, 2]],
-
-           [[-1,-1,-1],
-            [ 2, 2, 2],     
-            [-1,-1,-1]],  
+           [[1, 1, 1],
+            [1, 1, 1],     
+            [1, 1, 1]]
            ]
         ]
 
 NNFrame = NeuralFrame([10, 81, 784], [CalcCost, Sigmoid, Sigmoid])
-MakeTxT(NNFrame)
+#MakeTxT(NNFrame)
 
 OutputData = []
 for Numb in labels:
