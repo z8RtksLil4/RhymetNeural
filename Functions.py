@@ -16,6 +16,11 @@ class Setter():
         self.Chunk = OpenFrame['Chunk']
         exec('self.LoadingBar = ' + OpenFrame["LoadingBar"])
         exec('self.Filters = ' + OpenFrame["Filters"])
+        KFrame = open("Kernals/AllKernals.json", "r")
+        OpenKFrame = json.load(KFrame)
+        KFrame.close()
+        exec('self.Kernals = ' + OpenKFrame["Kernals"])
+
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
 class NeuralFrame:
@@ -40,6 +45,7 @@ class NeuralFrame:
 
         self.loadbar = LoadingBarPre
         self.Filters = []
+        self.Kernals = []
 
     def SetCusLoad(self, load):
         self.loadbar = load
@@ -47,7 +53,26 @@ class NeuralFrame:
 
     def SetFilters(self, NewFilter):
         self.Filters = NewFilter
+        self.Filters.reverse()
         return self
+
+    def SetKernals(self, NewKernals):
+        self.Kernals = NewKernals
+        return self
+
+
+
+def BlankKernal(KernLis):
+    lenlis = []
+    BKerns = []
+    for kr in KernLis:
+        NewBK = []
+        for cde in range(len(kr)):
+            NewBK.append(np.zeros((3,3)).tolist())
+        BKerns.append(NewBK)
+
+    return BKerns
+
 
 def trnnp(lisdt):
     newlist = np.zeros((len(lisdt[0]), len(lisdt)))
@@ -55,6 +80,40 @@ def trnnp(lisdt):
         for j in range(len(lisdt[0])):
             newlist[j][i] = lisdt[i][j]
     return newlist
+
+
+def KernalBackProp(CalK, NextLay, OldKern, Lr):
+    Ravel = UnChunk(OldKern)
+    RavelInt = 0
+    for i in range(3):
+        for j in range(3):
+
+            for r in range(len(CalK)):
+                for c in range(len(CalK)):
+                    Ravel[RavelInt] += (NextLay[i+r][j+c] * CalK[r][c]) * Lr
+
+            RavelInt += 1
+
+
+    Ravel = Chunk(Ravel, 3)
+
+    return Ravel
+
+
+def AddKernal(NewKerns, OldKerns, div):
+
+    for i in range(len(NewKerns)):
+        for j in range(len(NewKerns[i])):
+            for k in range(len(NewKerns[i][j])):
+                for o in range(len(NewKerns[i][j][k])):
+                    OldKerns[i][j][k][o] += (NewKerns[i][j][k][o]/div)
+                    
+    NewKData = json.loads('{"Kernals": 0}')
+    NewKData['Kernals'] = str(OldKerns)
+    OpeKnFile = open("Kernals/AllKernals.json", "w")
+    json.dump(NewKData, OpeKnFile)
+    OpeKnFile.close()
+
 
 def PoolBackProp(Kw, Kh, Image, PrevGradient):
     NewGrad = np.zeros((len(Image[0]),len(Image[0]))).tolist()
@@ -187,7 +246,6 @@ def PoolAry(Kw, Kh, Image):
 def SumCheck(x):
     if type(x) != list:
         return x
-
     return sum(x)
 
 #Turns a 1D list into a 2D list
@@ -260,6 +318,14 @@ def Tanh(x):
 def TanhDerv(y):
     return 1 - (pow(math.tanh(y), 2))
 
+
+def CreateKernal():
+    NewK = np.zeros((3,3)).tolist()
+    for i in range(3):
+        for j in range(3):
+            NewK[i][j] = rand()
+    return NewK
+
 #Swish Activation Function
 def Swish(x):
     try:
@@ -306,10 +372,16 @@ def ActivationList(x, Acti):
         newList.append(Acti(i))
     return newList
 
+#Plutonian initialization method
+def Plutonian(n):
+    return np.random.uniform(low=-((10*n)/pow(n, 1.85)), high=((10*n)/pow(n, 1.85)))
 
-#Random Float between -11 and 11
+#He initialization method
+def He(n):
+    return np.random.normal(loc=0, scale=math.sqrt(2/n))
+
 def rand():
-    return random.uniform(-1, 1)   #randrange(-10, 10) + (random.randrange(-100, 100) / 100)
+    return random.uniform(-0.35, 0.35)  
 
 
 
@@ -361,32 +433,7 @@ def GetFresh(eferf):
                 while type(LayLis[i + 1]) == str:
                     LayLis.pop(i+1)
 
-                """match LayLis[i+1]:
-                    case "P":
-                        addtopool = 2
-                        while LayLis[i + addtopool] == "P":
-                            addtopool += 1
-                        for j in range(LayLis[i]):
-                            l2 = []
-                            for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
-                                l2.append(0)
-                            l1.append(l2)
-                        WFreash.append(l1)
-                        while LayLis[i + 1] == "P":
-                            LayLis.pop(i+1)
 
-                    case "C":
-                        addtopool = 2
-                        while LayLis[i + addtopool] == "C":
-                            addtopool += 1
-                        for j in range(LayLis[i]):
-                            l2 = []
-                            for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-((addtopool-1)*2), 2))):
-                                l2.append(0)
-                            l1.append(l2)
-                        WFreash.append(l1)
-                        while LayLis[i + 1] == "C":
-                            LayLis.pop(i+1)"""
         except:
             break
 
@@ -434,6 +481,8 @@ def MakeTxT(Frame):
     CopyLis = []
     WFreash = []
     Oglen = len(LayLis)
+    Kerns = []
+    KernInt = 0
 
     for ints in LayLis:
         if type(ints) == str:
@@ -450,6 +499,7 @@ def MakeTxT(Frame):
 
             if type(LayLis[i+1]) == str:
                 srtTofile = []
+                KernDone = False
                 for j in range(LayLis[i]):
 
                     if type(LayLis[i+1]) == str:
@@ -460,7 +510,22 @@ def MakeTxT(Frame):
                         if LayLis[i + 1] != "P":
                             ext = 3
 
+
+                        if LayLis[i + 1] == "K" and not KernDone:
+                            Kerns.append([])
+                            for kr in range(Frame.Kernals[KernInt]):
+                                Kerns[KernInt].append(CreateKernal())
+                            KernInt += 1   
+                            KernDone = True 
+
                         while type(LayLis[i + addtopool]) == str:
+                            
+                            if LayLis[i + 1] == "K" and not KernDone:
+                                Kerns.append([])
+                                for kr in range(Frame.Kernals[KernInt]):
+                                    Kerns[KernInt].append(CreateKernal())
+                                KernInt += 1   
+                                KernDone = True 
 
                             if LayLis[i + addtopool] == "P":
                                 ext += 1
@@ -471,18 +536,8 @@ def MakeTxT(Frame):
         
                         for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
 
-                            srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
-                        #LayLis.pop(i+1)
-                        """case "C":
-                        srtTofile.append([])
-                        addtopool = 2
-                        while LayLis[i + addtopool] == "C":
-                            addtopool += 1
-        
-                        for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-((addtopool-1)*2), 2))):
+                            srtTofile[j].append(Plutonian(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))))#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
 
-                            srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
-                        #LayLis.pop(i+1)"""
                 while type(LayLis[i + 1]) == str:
                     LayLis.pop(i+1)
 
@@ -492,27 +547,19 @@ def MakeTxT(Frame):
                     srtTofile.append([])
                     for k in range(LayLis[i + 1]):
 
-                        srtTofile[j].append(rand())#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
+                        srtTofile[j].append(Plutonian(LayLis[i + 1]))#np.random.normal(loc=0, scale=math.sqrt(2/LayLis[i + 1])))
 
-            """while LayLis[i + 1] == "P":
-                LayLis.pop(i+1)
-            #Okay so this is going to cause an error if pools and convos are both used
-            while LayLis[i + 1] == "C":
-                LayLis.pop(i+1)"""
 
-            """print(len(srtTofile))
-            print(len(srtTofile[6]))
-            print((FileNum))"""
             NewData = json.loads('{"Weights": [], "Bias":0}')
             NewData['Weights'] = srtTofile
             OpenFile = open("WBL" + str(FileNum) + "/WeightsLay.json", "w")
             json.dump(NewData, OpenFile)
             OpenFile.close()
+            
 
 
-
-
-    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0 }')
+    Kerns.reverse()
+    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0}')
     SavedFrame['Neurons'] = CopyLis
     SavedFrame['Activtions'] = Frame.ActivName
     SavedFrame['CostFunction'] = Frame.CostFun.__name__
@@ -524,7 +571,11 @@ def MakeTxT(Frame):
     json.dump(SavedFrame, OpenFile)
     OpenFile.close()
 
-
+    KernalFrame = json.loads( '{"Kernals":0 }')
+    KernalFrame['Kernals'] = str(Kerns)
+    OpenKFile = open("Kernals/AllKernals.json", "w")
+    json.dump(KernalFrame, OpenKFile)
+    OpenFile.close()
     print("Previous data overwritten, New data inserted")
     return(WFreash)
 
