@@ -489,6 +489,12 @@ def MakeTxT(Frame):
             Oglen -= 1
         CopyLis.append(ints)
 
+    for nhjik in Frame.Kernals:
+        Kerns.append([])
+        for kr in range(Frame.Kernals[KernInt]):
+            Kerns[KernInt].append(CreateKernal())
+        KernInt += 1   
+        KernDone = True 
 
     for i in range(len(LayLis) - 1):
     #while (i < len(LayLis) - 1):
@@ -511,21 +517,10 @@ def MakeTxT(Frame):
                             ext = 3
 
 
-                        if LayLis[i + 1] == "K" and not KernDone:
-                            Kerns.append([])
-                            for kr in range(Frame.Kernals[KernInt]):
-                                Kerns[KernInt].append(CreateKernal())
-                            KernInt += 1   
-                            KernDone = True 
 
                         while type(LayLis[i + addtopool]) == str:
                             
-                            if LayLis[i + 1] == "K" and not KernDone:
-                                Kerns.append([])
-                                for kr in range(Frame.Kernals[KernInt]):
-                                    Kerns[KernInt].append(CreateKernal())
-                                KernInt += 1   
-                                KernDone = True 
+
 
                             if LayLis[i + addtopool] == "P":
                                 ext += 1
