@@ -64,7 +64,8 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
         BiasNew = FreshBi(BiasLis)
 
-        WeightsSummed = GetFresh(MainList)
+
+        WeightsSummed = GetFresh(MainList, Kernals)
 
         KernsSummed = BlankKernal(Kernals)
 
@@ -131,6 +132,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
                         Filtered = []
                         for Filter in Kernals[KernInt]:
+                            #print(len(Filter))
                             Filtered.append(Convolution(LayN, Filter))
                         CombinedFilters = CombineGrids(Filtered)
                         LayN = UnChunk(CombinedFilters) 
@@ -160,7 +162,9 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             
             l = 0
 
-            KernsSummed.reverse()
+            KernsSummed.reverse() #Is this wrong?
+
+            #Kernals.reverse() #I am going to be so pissed if this imprves anything
             curMainList = copy.deepcopy(MainList)
             FiltInt = 0
             KernInt = 0
@@ -198,16 +202,11 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         for i in range(len(prevcalc)):
                             prevcalc[i] = SumCheck(prevcalc[i])
 
-
-
                         calcsquare = Chunk(prevcalc, int(math.sqrt(len(prevcalc))))
                         for kbp in range(len(KernsSummed[KernInt])):
                             KernsSummed[KernInt][kbp] = KernalBackProp(calcsquare, LayAf, KernsSummed[KernInt][kbp], LearnRate)
 
-
-
-
-                        NewFilter = CombineGrids(Kernals[KernInt])
+                        NewFilter = CombineGrids(Kernals[len(Kernals) - 1 - KernInt])
                         #Im not sure this works correctly, Come back to this
 
                         LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
@@ -241,7 +240,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         l += 1
 
             KernsSummed.reverse()   
-
+            #Kernals.reverse()#I am going to be so pissed if this imprves anything
 
             AIaws = FindMax(Layers[0])
             RLaws = FindMax(Expected)

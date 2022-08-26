@@ -1,1 +1,1 @@
-{"Neurons": [10, 40, 49, "K", 784], "Activtions": "[Relu, Relu, Relu]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]"}
+{"Neurons": [10, 81, 81, "K", 784], "Activtions": "[Relu, Relu, Relu]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]"}

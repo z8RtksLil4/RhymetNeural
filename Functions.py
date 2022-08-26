@@ -68,7 +68,8 @@ def BlankKernal(KernLis):
     for kr in KernLis:
         NewBK = []
         for cde in range(len(kr)):
-            NewBK.append(np.zeros((3,3)).tolist())
+
+            NewBK.append(np.zeros((len(kr[cde]),len(kr[cde]))).tolist())
         BKerns.append(NewBK)
 
     return BKerns
@@ -85,8 +86,8 @@ def trnnp(lisdt):
 def KernalBackProp(CalK, NextLay, OldKern, Lr):
     Ravel = UnChunk(OldKern)
     RavelInt = 0
-    for i in range(3):
-        for j in range(3):
+    for i in range(len(OldKern)):
+        for j in range(len(OldKern)):
 
             for r in range(len(CalK)):
                 for c in range(len(CalK)):
@@ -95,7 +96,7 @@ def KernalBackProp(CalK, NextLay, OldKern, Lr):
             RavelInt += 1
 
 
-    Ravel = Chunk(Ravel, 3)
+    Ravel = Chunk(Ravel, len(OldKern))
 
     return Ravel
 
@@ -169,31 +170,33 @@ def Convolution(Image, IMGfilter):
     NewIMG = []
     Image = Chunk(Image, int(math.sqrt(len(Image))))
     #Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
-
-    for i in range(1, len(Image) - 1):
+    FiltLen = len(IMGfilter)
+    for i in range(0, len(Image) - (FiltLen - 1)):
 
         NewRow = []
-        for j in range(1, len(Image[0]) - 1):
+        for j in range(0, len(Image[0]) - (FiltLen - 1)):
             Total = 0
 
-            for r in range(-1,2):
-                for c in range(-1,2):
+            for r in range(0,FiltLen):
+                for c in range(0,FiltLen):
 
-                    Total += Image[i+r][j+c] * IMGfilter[r+1][c+1]
+                    Total += Image[i+r][j+c] * IMGfilter[r][c]
 
-            NewRow.append(abs(Total))
+            NewRow.append(abs(Total)) #Why are we doing the absolute value?
         NewIMG.append(NewRow)
         
     return(NewIMG)
 
 
 def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
+    #print(len(IMGfilter))
+    #print((IMGfilter[0][0]))
     NewIMG = np.zeros((len(Image),len(Image))).tolist()
     PrevGradInd = 0
 
-    for i in range(0, len(NewIMG)-2):
+    for i in range(0, len(NewIMG)-(len(IMGfilter)-1)):
 
-        for j in range(0, len(NewIMG[0])-2):
+        for j in range(0, len(NewIMG[0])-(len(IMGfilter)-1)):
             Total = 0
 
             """            for q in range(len(IMGfilter)):
@@ -201,8 +204,8 @@ def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
                             for c in range(3):
                                 NewIMG[i+r][j+c] += IMGfilter[q][r][c] 
             """
-            for r in range(3):
-                for c in range(3):
+            for r in range(len(IMGfilter)):
+                for c in range(len(IMGfilter)):
                     NewIMG[i+r][j+c] = IMGfilter[r][c] * PrevGradient[PrevGradInd]
 
 
@@ -319,10 +322,10 @@ def TanhDerv(y):
     return 1 - (pow(math.tanh(y), 2))
 
 
-def CreateKernal():
-    NewK = np.zeros((3,3)).tolist()
-    for i in range(3):
-        for j in range(3):
+def CreateKernal(root):
+    NewK = np.zeros((root,root)).tolist()
+    for i in range(root):
+        for j in range(root):
             NewK[i][j] = rand()
     return NewK
 
@@ -391,7 +394,15 @@ def ConvFloatList(listparam):
 
 
 #This creates a Fresh List for Weights
-def GetFresh(eferf):
+def GetFresh(eferf, Ks):
+    KrootL = []
+    for i in Ks:
+        for j in i:
+            KrootL.append(len(j))
+            break
+
+    KrootL.reverse()
+
     LayLis = []
     for bghjnkl in eferf:
         LayLis.append(bghjnkl)
@@ -409,18 +420,25 @@ def GetFresh(eferf):
                     l1.append(l2)
                 WFreash.append(l1)
             else:
-
+                KRint = 0
                 addtopool = 2
                 ext = 2
                 if LayLis[i + 1] != "P":
                     ext = 3
+                    if LayLis[i + 1] == "K":
+                        ext = KrootL[KRint]
+                        KRint += 1 
 
                 while type(LayLis[i + addtopool]) == str:
 
                     if LayLis[i + addtopool] == "P":
                         ext += 1
                     else:
-                        ext += 2
+                        if LayLis[i + 1] == "K":
+                            ext += KrootL[KRint] - 1
+                            KRint += 1 
+                        else:
+                            ext += 2
 
                     addtopool += 1
 
@@ -431,7 +449,10 @@ def GetFresh(eferf):
                     l1.append(l2)
                 WFreash.append(l1)
                 while type(LayLis[i + 1]) == str:
+                    if LayLis[i + 1] == "K":
+                        KrootL.pop(0)
                     LayLis.pop(i+1)
+
 
 
         except:
@@ -489,10 +510,12 @@ def MakeTxT(Frame):
             Oglen -= 1
         CopyLis.append(ints)
 
+    KrootL = []
     for nhjik in Frame.Kernals:
         Kerns.append([])
-        for kr in range(Frame.Kernals[KernInt]):
-            Kerns[KernInt].append(CreateKernal())
+        for kr in range(Frame.Kernals[KernInt][0]):
+            Kerns[KernInt].append(CreateKernal(Frame.Kernals[KernInt][1]))
+            KrootL.append(Frame.Kernals[KernInt][1])
         KernInt += 1   
         KernDone = True 
 
@@ -510,30 +533,42 @@ def MakeTxT(Frame):
 
                     if type(LayLis[i+1]) == str:
 
+                        KRint = 0
+
                         srtTofile.append([])
                         addtopool = 2
                         ext = 2
                         if LayLis[i + 1] != "P":
                             ext = 3
+                            if LayLis[i + 1] == "K":
+                                ext = KrootL[KRint]
+                                KRint += 1 
+
 
 
 
                         while type(LayLis[i + addtopool]) == str:
                             
 
-
                             if LayLis[i + addtopool] == "P":
                                 ext += 1
                             else:
-                                ext += 2
+                                if LayLis[i + 1] == "K":
+                                    ext += KrootL[KRint] - 1
+
+                                    KRint += 1 
+                                else:
+                                    ext += 2
 
                             addtopool += 1
-        
+
                         for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
 
                             srtTofile[j].append(Plutonian(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))))#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
 
                 while type(LayLis[i + 1]) == str:
+                    if LayLis[i + 1] == "K":
+                        KrootL.pop(0)
                     LayLis.pop(i+1)
 
             else:
