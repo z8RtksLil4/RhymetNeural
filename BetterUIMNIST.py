@@ -190,7 +190,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         NewFilter = CombineGrids(Filters[FiltInt])
                         #Im not sure this works correctly, Come back to this
 
-                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
+                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc, LearnRate)
                         prevcalc = UnChunk(LayAf)
                         curMainList.pop(l)
                         Layers.pop(l)
@@ -209,7 +209,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         NewFilter = CombineGrids(Kernals[len(Kernals) - 1 - KernInt])
                         #Im not sure this works correctly, Come back to this
 
-                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
+                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc, LearnRate)
                         prevcalc = UnChunk(LayAf)
                         curMainList.pop(l)
                         Layers.pop(l)
