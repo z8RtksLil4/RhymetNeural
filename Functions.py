@@ -188,7 +188,7 @@ def Convolution(Image, IMGfilter):
     return(NewIMG)
 
 
-def ConvolutionBackProp(Image, IMGfilter, PrevGradient, Lr):
+def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
     #print(len(IMGfilter))
     #print((IMGfilter[0][0]))
     NewIMG = np.zeros((len(Image),len(Image))).tolist()
@@ -206,7 +206,7 @@ def ConvolutionBackProp(Image, IMGfilter, PrevGradient, Lr):
             """
             for r in range(len(IMGfilter)):
                 for c in range(len(IMGfilter)):
-                    NewIMG[i+r][j+c] = IMGfilter[r][c] * PrevGradient[PrevGradInd] * Lr
+                    NewIMG[i+r][j+c] = IMGfilter[r][c] * PrevGradient[PrevGradInd]
 
 
             PrevGradInd += 1
