@@ -515,7 +515,7 @@ def MakeTxT(Frame):
         Kerns.append([])
         for kr in range(Frame.Kernals[KernInt][0]):
             Kerns[KernInt].append(CreateKernal(Frame.Kernals[KernInt][1]))
-            KrootL.append(Frame.Kernals[KernInt][1])
+        KrootL.append(Frame.Kernals[KernInt][1])
         KernInt += 1   
         KernDone = True 
 
