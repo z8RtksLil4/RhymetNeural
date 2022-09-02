@@ -434,7 +434,7 @@ def GetFresh(eferf, Ks):
                     if LayLis[i + addtopool] == "P":
                         ext += 1
                     else:
-                        if LayLis[i + 1] == "K":
+                        if LayLis[i + addtopool] == "K":
                             ext += KrootL[KRint] - 1
                             KRint += 1 
                         else:
@@ -553,7 +553,7 @@ def MakeTxT(Frame):
                             if LayLis[i + addtopool] == "P":
                                 ext += 1
                             else:
-                                if LayLis[i + 1] == "K":
+                                if LayLis[i + addtopool] == "K":
                                     ext += KrootL[KRint] - 1
 
                                     KRint += 1 
