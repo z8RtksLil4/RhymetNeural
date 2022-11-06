@@ -21,6 +21,12 @@ class Setter():
         KFrame.close()
         exec('self.Kernals = ' + OpenKFrame["Kernals"])
 
+        KFrame = open("Kernals/BlankKerns.json", "r")
+        OpenKFrame = json.load(KFrame)
+        KFrame.close()
+        exec('self.BlaKernals = ' + OpenKFrame["Kernals"])
+
+
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
 class NeuralFrame:
@@ -107,7 +113,8 @@ def AddKernal(NewKerns, OldKerns, div):
         for j in range(len(NewKerns[i])):
             for k in range(len(NewKerns[i][j])):
                 for o in range(len(NewKerns[i][j][k])):
-                    OldKerns[i][j][k][o] += (NewKerns[i][j][k][o]/div)
+                    for q in range(len(NewKerns[i][j][k])):
+                        OldKerns[i][j][k][o][q] += (NewKerns[i][j][k][o][q]/div)
                     
     NewKData = json.loads('{"Kernals": 0}')
     NewKData['Kernals'] = str(OldKerns)
@@ -187,10 +194,85 @@ def Convolution(Image, IMGfilter):
         
     return(NewIMG)
 
+def KERNConvolution(Image, IMGfilter):
+    NewIMG = []
+    #Image = Chunk(Image, int(math.sqrt(len(Image))))
+
+    #Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
+    FiltLen = len(IMGfilter[0])
+
+    for i in range(0, len(Image[0]) - (FiltLen - 1)):
+
+        NewRow = []
+        for j in range(0, len(Image[0][0]) - (FiltLen - 1)):
+            Total = 0
+            for d in range(0,len(IMGfilter)):
+                for r in range(0,FiltLen):
+                    for c in range(0,FiltLen):
+
+                        Total += Image[d][i+r][j+c] * IMGfilter[d][r][c]
+
+            #Why are we doing the absolute value?
+            #I don't know but It makes it work
+            NewRow.append(abs(Total)) 
+        NewIMG.append(NewRow)
+
+
+    return(NewIMG)
+
+
+def COMBO3D(Images):
+
+    newCon = np.zeros((len(Images[0]), len(Images[0][0]), len(Images[0][0][0]))).tolist()
+    for Image in Images:
+        newCon = np.array(np.add(Image, newCon)).tolist()
+    return newCon
+
+def KERNBACKPNORMAL(Image, IMGfilter, Backp):
+    NewIMG = np.zeros((len(Image), len(Image[0]), len(Image[0][0]))).tolist()
+
+    #rint(len(IMGfilter[0][0]))
+
+    FiltLen = len(IMGfilter[0])
+    BackInt = 0
+    for i in range(0, len(Image[0]) - (FiltLen - 1)):
+
+
+        for j in range(0, len(Image[0][0]) - (FiltLen - 1)):
+
+            for d in range(0,len(IMGfilter)):
+                for r in range(0,FiltLen):
+                    for c in range(0,FiltLen):
+
+                        NewIMG[d][i+r][j+c] += IMGfilter[d][r][c] * Backp[BackInt]
+
+            BackInt += 1
+
+
+    #come back to there is some werid stuff with flattening and stuff and i am worried
+    return(NewIMG)
+
+
+def KERNBACKPConvolution(Image, IMGfilter, Backp):
+    #NewIMG = np.zeros((len(IMGfilter),len(IMGfilter[0]),len(IMGfilter[0]))).tolist()
+    cubeprop = Chunk(Backp, int(math.sqrt(len(Backp))))
+
+    #print(len(Backp))
+    FiltLen = len(cubeprop)
+
+    for d in range(0,len(Image)):
+
+        for i in range(0, len(Image[0]) - (FiltLen - 1)):
+
+            for j in range(0, len(Image[0][0]) - (FiltLen - 1)):
+
+                for r in range(0,FiltLen):
+                        for c in range(0,FiltLen):
+                            IMGfilter[d][i][j] += Image[d][i+r][j+c] * cubeprop[r][c]
+
 
 def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
-    #print(len(IMGfilter))
-    #print((IMGfilter[0][0]))
+
     NewIMG = np.zeros((len(Image),len(Image))).tolist()
     PrevGradInd = 0
 
@@ -271,7 +353,29 @@ def UnChunk(Lis):
 
     return (newLis)
 
+#Turns a 3D list into a 1D list
+def SuperUnChunk(Lis):
+    newLis = []
+    for i in range(len(Lis)):
 
+        for j in range(len(Lis[i])):
+
+            for k in range(len(Lis[i][j])):
+
+                newLis.append(Lis[i][j][k])
+
+    return (newLis)
+
+def BackpropSplitKern(CubLis, by):
+    test = []
+    new = int(len(CubLis)/by)
+    while(len(CubLis)>0):
+        jni = []
+        for i in range(new):
+            jni.append(CubLis.pop(0))
+        test.append(jni)
+
+    return test
 
 def CalcCost(Exp, Real):
     CosList = []
@@ -392,77 +496,81 @@ def rand():
 def ConvFloatList(listparam):
     return list(map(float, listparam.split()))
 
+#old Get fresh, keeping it here just incase
+"""KrootL = []
+for i in Ks:
+    for j in i:
+        KrootL.append(len(j))
+        break
+
+KrootL.reverse()
+
+LayLis = []
+for bghjnkl in eferf:
+    LayLis.append(bghjnkl)
+
+WFreash = []
+for i in range(len(LayLis)):
+    l1 = []
+    try:
+
+        if(type(LayLis[i+1]) != str):
+            for j in range(LayLis[i]):
+                l2 = []
+                for k in range(LayLis[i + 1]):
+                    l2.append(0)
+                l1.append(l2)
+            WFreash.append(l1)
+        else:
+            KRint = 0
+            addtopool = 2
+            ext = 2
+            if LayLis[i + 1] != "P":
+                ext = 3
+                if LayLis[i + 1] == "K":
+                    ext = KrootL[KRint]
+                    KRint += 1 
+
+            while type(LayLis[i + addtopool]) == str:
+
+                if LayLis[i + addtopool] == "P":
+                    ext += 1
+                else:
+                    if LayLis[i + addtopool] == "K":
+                        ext += KrootL[KRint] - 1
+                        KRint += 1 
+                    else:
+                        ext += 2
+
+                addtopool += 1
+
+            for j in range(LayLis[i]):
+                l2 = []
+                for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
+                    l2.append(0)
+                l1.append(l2)
+            WFreash.append(l1)
+            while type(LayLis[i + 1]) == str:
+                if LayLis[i + 1] == "K":
+                    KrootL.pop(0)
+                LayLis.pop(i+1)
+
+
+
+    except:
+        break
+
+return(WFreash)"""
 
 #This creates a Fresh List for Weights
-def GetFresh(eferf, Ks):
-    KrootL = []
-    for i in Ks:
-        for j in i:
-            KrootL.append(len(j))
-            break
+def GetFresh(eferf):
+    Fwe = []
+    for d2 in eferf:
+        Fwe.append(np.zeros((len(d2),len(d2[0]))).tolist())
 
-    KrootL.reverse()
-
-    LayLis = []
-    for bghjnkl in eferf:
-        LayLis.append(bghjnkl)
-    
-    WFreash = []
-    for i in range(len(LayLis)):
-        l1 = []
-        try:
-
-            if(type(LayLis[i+1]) != str):
-                for j in range(LayLis[i]):
-                    l2 = []
-                    for k in range(LayLis[i + 1]):
-                        l2.append(0)
-                    l1.append(l2)
-                WFreash.append(l1)
-            else:
-                KRint = 0
-                addtopool = 2
-                ext = 2
-                if LayLis[i + 1] != "P":
-                    ext = 3
-                    if LayLis[i + 1] == "K":
-                        ext = KrootL[KRint]
-                        KRint += 1 
-
-                while type(LayLis[i + addtopool]) == str:
-
-                    if LayLis[i + addtopool] == "P":
-                        ext += 1
-                    else:
-                        if LayLis[i + addtopool] == "K":
-                            ext += KrootL[KRint] - 1
-                            KRint += 1 
-                        else:
-                            ext += 2
-
-                    addtopool += 1
-
-                for j in range(LayLis[i]):
-                    l2 = []
-                    for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
-                        l2.append(0)
-                    l1.append(l2)
-                WFreash.append(l1)
-                while type(LayLis[i + 1]) == str:
-                    if LayLis[i + 1] == "K":
-                        KrootL.pop(0)
-                    LayLis.pop(i+1)
-
-
-
-        except:
-            break
-
-    return(WFreash)
-
+    return Fwe
 
 #This is used to get text from a file 
-#Because 
 class TxtGetW():
     def __init__(self, FileNum):
         NetWeTxt = open("WBL" + str(FileNum) + "/WeightsLay.json", "r")
@@ -496,25 +604,43 @@ def GetTxT(LayLis):
     return((WFtxt, WBtxt))
 
 
-#Creates Weights in a text file
+#Creates Weights in a text file, this does not need to be good it just needs to work 
 def MakeTxT(Frame):
     LayLis = Frame.NeurList
     CopyLis = []
     WFreash = []
     Oglen = len(LayLis)
     Kerns = []
-    KernInt = 0
+    BlankKerns = []
 
     for ints in LayLis:
         if type(ints) == str:
             Oglen -= 1
         CopyLis.append(ints)
 
+    KernInt = 0
+    DepthList = []
     KrootL = []
     for nhjik in Frame.Kernals:
-        Kerns.append([])
+        #Kerns.append([])
+        Dtc = 1
+        try:
+            Dtc = Frame.Kernals[KernInt+1][0]
+        except:
+            Dtc = 1 #Change this for 3D inputs
+
+        BDKern = []
+        TDKern = [] 
         for kr in range(Frame.Kernals[KernInt][0]):
-            Kerns[KernInt].append(CreateKernal(Frame.Kernals[KernInt][1]))
+            TDKern.append([])
+            BDKern.append([])
+            for d in range(Dtc):
+                TDKern[kr].append(CreateKernal(Frame.Kernals[KernInt][1]))
+                BDKern[kr].append(np.zeros((Frame.Kernals[KernInt][1], Frame.Kernals[KernInt][1])).tolist())
+                
+        Kerns.append(TDKern)
+        BlankKerns.append(BDKern)
+        DepthList.append(Frame.Kernals[KernInt][0]) #making depth
         KrootL.append(Frame.Kernals[KernInt][1])
         KernInt += 1   
         KernDone = True 
@@ -534,7 +660,7 @@ def MakeTxT(Frame):
                     if type(LayLis[i+1]) == str:
 
                         KRint = 0
-
+                        Kdt = DepthList[KRint]
                         srtTofile.append([])
                         addtopool = 2
                         ext = 2
@@ -544,9 +670,6 @@ def MakeTxT(Frame):
                                 ext = KrootL[KRint]
                                 KRint += 1 
 
-
-
-
                         while type(LayLis[i + addtopool]) == str:
                             
 
@@ -555,20 +678,23 @@ def MakeTxT(Frame):
                             else:
                                 if LayLis[i + addtopool] == "K":
                                     ext += KrootL[KRint] - 1
-
                                     KRint += 1 
                                 else:
                                     ext += 2
 
                             addtopool += 1
 
-                        for k in range(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))):
+                        #print(Kdep)
+                        MakeThis = int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2)) * Kdt
 
-                            srtTofile[j].append(Plutonian(int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2))))#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
+                        for k in range(MakeThis):
+
+                            srtTofile[j].append(Plutonian(MakeThis))#np.random.normal(loc=0, scale=math.sqrt(2/int(pow(math.sqrt(LayLis[i + addtopool])-(addtopool-1), 2)))))
 
                 while type(LayLis[i + 1]) == str:
                     if LayLis[i + 1] == "K":
                         KrootL.pop(0)
+                        DepthList.pop(0)
                     LayLis.pop(i+1)
 
             else:
@@ -589,6 +715,8 @@ def MakeTxT(Frame):
 
 
     Kerns.reverse()
+    BlankKerns.reverse()
+
     SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0}')
     SavedFrame['Neurons'] = CopyLis
     SavedFrame['Activtions'] = Frame.ActivName
@@ -606,6 +734,13 @@ def MakeTxT(Frame):
     OpenKFile = open("Kernals/AllKernals.json", "w")
     json.dump(KernalFrame, OpenKFile)
     OpenFile.close()
+
+    KernalFrame = json.loads( '{"Kernals":0 }')
+    KernalFrame['Kernals'] = str(BlankKerns)
+    OpenKFile = open("Kernals/BlankKerns.json", "w")
+    json.dump(KernalFrame, OpenKFile)
+    OpenFile.close()
+    
     print("Previous data overwritten, New data inserted")
     return(WFreash)
 

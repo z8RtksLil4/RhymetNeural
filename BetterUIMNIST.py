@@ -65,9 +65,9 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
         BiasNew = FreshBi(BiasLis)
 
 
-        WeightsSummed = GetFresh(MainList, Kernals)
+        WeightsSummed = GetFresh(Weights)
 
-        KernsSummed = BlankKernal(Kernals)
+        KernsSummed = copy.deepcopy(Sert.BlaKernals)
 
         LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
         LoadingPro = ""
@@ -103,6 +103,8 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
             FiltInt = 0
             KernInt = 0
+
+            CubeKernLay = []
             while (CurInd < len(Turned)):
 
                 while type(curMainList[CurInd + 1]) == str:
@@ -128,16 +130,22 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         FiltInt += 1
 
                     while curMainList[CurInd + 1] == "K":
-                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                        if(type(LayN[0]) == float):
+                            LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
+                            CubeKernLay.append(LayN)
+
 
                         Filtered = []
                         for Filter in Kernals[KernInt]:
-                            #print(len(Filter))
-                            Filtered.append(Convolution(LayN, Filter))
-                        CombinedFilters = CombineGrids(Filtered)
-                        LayN = UnChunk(CombinedFilters) 
-                        Layers.append(UnChunk(CombinedFilters))
+                            Filtered.append(KERNConvolution(LayN, Filter))
+
+                        LayN = Filtered
+                        Layers.append(SuperUnChunk(Filtered))
+                        CubeKernLay.append(copy.deepcopy(Filtered))
                         curMainList.pop(CurInd+1)
+                        if(curMainList[CurInd + 1] != "K"):
+                            LayN = SuperUnChunk(LayN)
+                            CubeKernLay.pop(len(CubeKernLay)-1)
                         KernInt += 1
 
                 LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
@@ -197,20 +205,38 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         FiltInt += 1
 
                     elif(curMainList[l] == "K"):
-                        LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
-                    
+                        BackK = len(Kernals) - 1 - KernInt
+
+
                         for i in range(len(prevcalc)):
                             prevcalc[i] = SumCheck(prevcalc[i])
 
-                        calcsquare = Chunk(prevcalc, int(math.sqrt(len(prevcalc))))
+                        SavedPre = copy.deepcopy(prevcalc)
+                        SplitCalc = BackpropSplitKern(prevcalc,len(Kernals[BackK]))
+                        prevcalc = SavedPre
+                        #print(9/0)
+                        #calcsquare = Chunk(prevcalc, int(math.sqrt(len(prevcalc))))
+
+
+
+                        AHHHHHh = []
                         for kbp in range(len(KernsSummed[KernInt])):
-                            KernsSummed[KernInt][kbp] = KernalBackProp(calcsquare, LayAf, KernsSummed[KernInt][kbp], LearnRate)
+                            KERNBACKPConvolution(CubeKernLay[BackK], KernsSummed[KernInt][kbp], SplitCalc[kbp])
+    
+                            AHHHHHh.append(KERNBACKPNORMAL(CubeKernLay[BackK], Kernals[BackK][kbp], SplitCalc[kbp]))
 
-                        NewFilter = CombineGrids(Kernals[len(Kernals) - 1 - KernInt])
+                            #AHHHHHh.append(SuperUnChunk(KERNBACKPNORMAL(CubeKernLay[BackK], Kernals[BackK][kbp], SplitCalc[kbp])))
+                        #Kernals[BackK]
+                        #CubeKernLay[BackK]
+                        #prevcalc
+                        #ADD THEM TOO THE THING YOU IDIOT
+
                         #Im not sure this works correctly, Come back to this
+                        #JoinedFilt = COMBO3D(Kernals[BackK])
+    
 
-                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
-                        prevcalc = UnChunk(LayAf)
+                        #LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
+                        prevcalc = SuperUnChunk(COMBO3D(AHHHHHh))
                         curMainList.pop(l)
                         Layers.pop(l)
                         KernInt += 1

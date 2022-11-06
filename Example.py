@@ -11,7 +11,7 @@ InputOG = images
 
 
 
-NNFrame = NeuralFrame([10, 81, 81, "K", 784], [CalcCost, Relu, Relu, Relu]).SetKernals([(1, 5)])
+NNFrame = NeuralFrame([10, 81, "K", "K", "K", 784], [CalcCost, Swish, Swish]).SetKernals([(5, 3), (4, 3), (5, 3)])
 MakeTxT(NNFrame)
 
 InputData = []
