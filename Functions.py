@@ -16,6 +16,7 @@ class Setter():
         self.Chunk = OpenFrame['Chunk']
         exec('self.LoadingBar = ' + OpenFrame["LoadingBar"])
         exec('self.Filters = ' + OpenFrame["Filters"])
+        exec('self.FiltFun = ' + OpenFrame["FiltFun"])
         KFrame = open("Kernals/AllKernals.json", "r")
         OpenKFrame = json.load(KFrame)
         KFrame.close()
@@ -26,6 +27,16 @@ class Setter():
         KFrame.close()
         exec('self.BlaKernals = ' + OpenKFrame["Kernals"])
 
+
+class Kset:
+    def __init__(self, *arg):
+
+        self.number = arg[0]
+        self.size = arg[1]
+        if(len(arg) == 3):
+            self.act = arg[2]
+        else:
+            self.act = Linear
 
 
 #This is a NeuralFrame, It is used for Compressing Data in Parameters
@@ -52,6 +63,7 @@ class NeuralFrame:
         self.loadbar = LoadingBarPre
         self.Filters = []
         self.Kernals = []
+        self.KernalFun = []
 
     def SetCusLoad(self, load):
         self.loadbar = load
@@ -64,6 +76,16 @@ class NeuralFrame:
 
     def SetKernals(self, NewKernals):
         self.Kernals = NewKernals
+        for i in NewKernals:
+            try:
+                self.KernalFun.append(i[2])
+            except:
+                self.KernalFun.append(Linear)
+
+        KernalFunLI = []
+        for fu in self.KernalFun:
+                KernalFunLI.append(fu.__name__)
+        self.KernalFun = str(KernalFunLI).replace("'", "")
         return self
 
 
@@ -194,16 +216,14 @@ def Convolution(Image, IMGfilter):
         
     return(NewIMG)
 
-def KERNConvolution(Image, IMGfilter):
+def KERNConvolution(Image, IMGfilter, Fun, DxFun):
     NewIMG = []
-    #Image = Chunk(Image, int(math.sqrt(len(Image))))
-
-    #Image = np.pad(Image, ((1,1),(1,1)), 'constant').tolist()
+    BackIMG = []
     FiltLen = len(IMGfilter[0])
 
     for i in range(0, len(Image[0]) - (FiltLen - 1)):
-
         NewRow = []
+        BackRow = []
         for j in range(0, len(Image[0][0]) - (FiltLen - 1)):
             Total = 0
             for d in range(0,len(IMGfilter)):
@@ -214,11 +234,13 @@ def KERNConvolution(Image, IMGfilter):
 
             #Why are we doing the absolute value?
             #I don't know but It makes it work
-            NewRow.append(abs(Total)) 
+            NewRow.append(Fun(Total)) 
+            BackRow.append(DxFun(Total)) 
         NewIMG.append(NewRow)
+        BackIMG.append(BackRow)
 
+    return (NewIMG, BackIMG)
 
-    return(NewIMG)
 
 
 def COMBO3D(Images):
@@ -717,7 +739,7 @@ def MakeTxT(Frame):
     Kerns.reverse()
     BlankKerns.reverse()
 
-    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0}')
+    SavedFrame = json.loads('{"Neurons": 0, "Activtions": 0, "CostFunction":0 , "Pooling":0, "Chunk":0, "LoadingBar":0, "Filters":0, "FiltFun":0}')
     SavedFrame['Neurons'] = CopyLis
     SavedFrame['Activtions'] = Frame.ActivName
     SavedFrame['CostFunction'] = Frame.CostFun.__name__
@@ -725,6 +747,7 @@ def MakeTxT(Frame):
     SavedFrame['Chunk'] = Frame.ChunkNumb
     SavedFrame['LoadingBar'] = Frame.loadbar.__name__
     SavedFrame['Filters'] = str(Frame.Filters)
+    SavedFrame['FiltFun'] =  (Frame.KernalFun)
     OpenFile = open("NetworkInfo.json", "w")
     json.dump(SavedFrame, OpenFile)
     OpenFile.close()
@@ -833,6 +856,15 @@ def CalcExpe(x):
     return NEl
 
 
+
+DerivativeDic = { 
+                    Sigmoid : SigmoidDerv,
+                    Tanh : TanhDerv,
+                    Swish : SwishDerv,
+                    Linear : LinearDerv,
+                    Relu : ReluDerv,
+                    LeakyRelu : LeakyReluDerv
+                }
 
 
 #these are just loading functions

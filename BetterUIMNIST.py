@@ -7,19 +7,6 @@ import copy
 
 
 
-DerivativeDic = { 
-                    Sigmoid : SigmoidDerv,
-                    Tanh : TanhDerv,
-                    Swish : SwishDerv,
-                    Linear : LinearDerv,
-                    Relu : ReluDerv,
-                    LeakyRelu : LeakyReluDerv
-                }
-
-
-
-
-
 def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
     Sert = Setter()
@@ -29,7 +16,8 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
     CostFunction = Sert.CostFunction
     Filters = Sert.Filters
     Kernals = Sert.Kernals
-
+    FiltFun = Sert.FiltFun
+    FiltFun.reverse()
     print("%")
 
 
@@ -104,7 +92,11 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             FiltInt = 0
             KernInt = 0
 
-            CubeKernLay = []
+
+            HereWeGo = []
+            TupleList = []
+
+
             while (CurInd < len(Turned)):
 
                 while type(curMainList[CurInd + 1]) == str:
@@ -132,23 +124,34 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                     while curMainList[CurInd + 1] == "K":
                         if(type(LayN[0]) == float):
                             LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
-                            CubeKernLay.append(LayN)
+                            TupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
 
 
                         Filtered = []
+                        BackFiltered = []
                         for Filter in Kernals[KernInt]:
-                            Filtered.append(KERNConvolution(LayN, Filter))
+
+                            InfoTuple = KERNConvolution(LayN, Filter, FiltFun[KernInt], DerivativeDic[FiltFun[KernInt]])
+                            Filtered.append(InfoTuple[0])
+                            BackFiltered.append(InfoTuple[1])
 
                         LayN = Filtered
                         Layers.append(SuperUnChunk(Filtered))
-                        CubeKernLay.append(copy.deepcopy(Filtered))
+                        HereWeGo.append(SuperUnChunk(BackFiltered))
+
+
+                        TupleList.append((len(Filtered), len(Filtered[0]), len(Filtered[0][0])))
                         curMainList.pop(CurInd+1)
+
+
                         if(curMainList[CurInd + 1] != "K"):
                             LayN = SuperUnChunk(LayN)
-                            CubeKernLay.pop(len(CubeKernLay)-1)
+                            TupleList.pop(len(TupleList)-1)
                         KernInt += 1
 
-                LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
+
+                down = np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist())
+                LayN = (np.array(ActivationList(down,Activations[CurInd])) + BiasLis[CurInd]).tolist()
                 Layers.append(LayN)
                 CurInd += 1
 
@@ -211,31 +214,33 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         for i in range(len(prevcalc)):
                             prevcalc[i] = SumCheck(prevcalc[i])
 
+
+
+
+                        n = len(prevcalc)#max(len(prevcalc), len(HereWeGo[BackK]))
+
+                        result = (np.array(HereWeGo[BackK])[:n]*np.array(prevcalc)[:n]).tolist()
+            
+                        prevcalc = result
+
+
+
                         SavedPre = copy.deepcopy(prevcalc)
                         SplitCalc = BackpropSplitKern(prevcalc,len(Kernals[BackK]))
                         prevcalc = SavedPre
-                        #print(9/0)
-                        #calcsquare = Chunk(prevcalc, int(math.sqrt(len(prevcalc))))
 
+
+                        CubedCalc = Layers[l+1]
+                        CubedCalc = np.reshape(CubedCalc, TupleList[BackK]).tolist()
 
 
                         AHHHHHh = []
                         for kbp in range(len(KernsSummed[KernInt])):
-                            KERNBACKPConvolution(CubeKernLay[BackK], KernsSummed[KernInt][kbp], SplitCalc[kbp])
+                            KERNBACKPConvolution(CubedCalc, KernsSummed[KernInt][kbp], SplitCalc[kbp])
     
-                            AHHHHHh.append(KERNBACKPNORMAL(CubeKernLay[BackK], Kernals[BackK][kbp], SplitCalc[kbp]))
+                            AHHHHHh.append(KERNBACKPNORMAL(CubedCalc, Kernals[BackK][kbp], SplitCalc[kbp]))
 
-                            #AHHHHHh.append(SuperUnChunk(KERNBACKPNORMAL(CubeKernLay[BackK], Kernals[BackK][kbp], SplitCalc[kbp])))
-                        #Kernals[BackK]
-                        #CubeKernLay[BackK]
-                        #prevcalc
-                        #ADD THEM TOO THE THING YOU IDIOT
 
-                        #Im not sure this works correctly, Come back to this
-                        #JoinedFilt = COMBO3D(Kernals[BackK])
-    
-
-                        #LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
                         prevcalc = SuperUnChunk(COMBO3D(AHHHHHh))
                         curMainList.pop(l)
                         Layers.pop(l)
@@ -246,15 +251,15 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist() 
 
 
-
                         for n in range(len(Layers[l])): #Going Through the Neurons
                             
+
+                            #Check back on this 
                             LayBackPro = (DerivativeDic[Activations[l]](Layers[l][n]) * SumCheck(prevcalc[n]))
 
                             BiasNew[l] += LearnRate * float(1 * LayBackPro)
 
                             for w in range(len(Weights[l][n])): #Going Through the Weights
-
 
                                 #LearnRate * (Neuronᴸ⁺¹[w] * Activation′(Neuronⁿ) * (sum(Turnedᴸ⁻¹[n]) or CostFunction(E, R)))
                                 WeightsSummed[l][n][w] += LearnRate * float(Layers[l + 1][w] * LayBackPro)
@@ -266,7 +271,6 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         l += 1
 
             KernsSummed.reverse()   
-            #Kernals.reverse()#I am going to be so pissed if this imprves anything
 
             AIaws = FindMax(Layers[0])
             RLaws = FindMax(Expected)
