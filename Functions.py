@@ -220,7 +220,6 @@ def KERNConvolution(Image, IMGfilter, Fun, DxFun):
     NewIMG = []
     BackIMG = []
     FiltLen = len(IMGfilter[0])
-
     for i in range(0, len(Image[0]) - (FiltLen - 1)):
         NewRow = []
         BackRow = []
@@ -229,7 +228,8 @@ def KERNConvolution(Image, IMGfilter, Fun, DxFun):
             for d in range(0,len(IMGfilter)):
                 for r in range(0,FiltLen):
                     for c in range(0,FiltLen):
-
+                        #print(len(IMGfilter[d]))
+                        #print(len(Image[d]))
                         Total += Image[d][i+r][j+c] * IMGfilter[d][r][c]
 
             #Why are we doing the absolute value?
@@ -323,6 +323,7 @@ def ConvolutionBackProp(Image, IMGfilter, PrevGradient):
 #This is a Neural Network pool
 def PoolAry(Kw, Kh, Image):
     NewImage = []
+
     for i in range(len(Image) - (Kh - 1)):
 
         NewRow = []
@@ -346,7 +347,7 @@ def PoolAry(Kw, Kh, Image):
 
         NewImage.append(NewRow)
 
-    return (NewImage)
+    return NewImage
 
 
 
@@ -516,7 +517,7 @@ def rand():
 
 #converts a string of float into a list of float
 def ConvFloatList(listparam):
-    return list(map(float, listparam.split()))
+    return list(map(float, listparam))
 
 #old Get fresh, keeping it here just incase
 """KrootL = []
@@ -626,7 +627,9 @@ def GetTxT(LayLis):
     return((WFtxt, WBtxt))
 
 
-#Creates Weights in a text file, this does not need to be good it just needs to work 
+#Creates Weights in a text file, 
+#All of this code is bad but does not need to be good 
+#it just needs to work Because it's only triggered once
 def MakeTxT(Frame):
     LayLis = Frame.NeurList
     CopyLis = []
@@ -643,30 +646,35 @@ def MakeTxT(Frame):
     KernInt = 0
     DepthList = []
     KrootL = []
-    for nhjik in Frame.Kernals:
-        #Kerns.append([])
-        Dtc = 1
-        try:
-            Dtc = Frame.Kernals[KernInt+1][0]
-        except:
-            Dtc = 1 #Change this for 3D inputs
 
-        BDKern = []
-        TDKern = [] 
-        for kr in range(Frame.Kernals[KernInt][0]):
-            TDKern.append([])
-            BDKern.append([])
-            for d in range(Dtc):
-                TDKern[kr].append(CreateKernal(Frame.Kernals[KernInt][1]))
-                BDKern[kr].append(np.zeros((Frame.Kernals[KernInt][1], Frame.Kernals[KernInt][1])).tolist())
-                
-        Kerns.append(TDKern)
-        BlankKerns.append(BDKern)
-        DepthList.append(Frame.Kernals[KernInt][0]) #making depth
-        KrootL.append(Frame.Kernals[KernInt][1])
-        KernInt += 1   
-        KernDone = True 
 
+
+    #for nhjik in Frame.Kernals:
+    for s in range(len(LayLis)):
+        if(LayLis[s] == "K"):
+            Dtc = 1
+            if(LayLis[s+1] == "K"):
+                Dtc = Frame.Kernals[KernInt+1][0]
+
+
+
+            BDKern = []
+            TDKern = [] 
+            for kr in range(Frame.Kernals[KernInt][0]):
+                TDKern.append([])
+                BDKern.append([])
+                for d in range(Dtc):
+                    TDKern[kr].append(CreateKernal(Frame.Kernals[KernInt][1]))
+                    BDKern[kr].append(np.zeros((Frame.Kernals[KernInt][1], Frame.Kernals[KernInt][1])).tolist())
+                    
+            Kerns.append(TDKern)
+            BlankKerns.append(BDKern)
+            DepthList.append(Frame.Kernals[KernInt][0]) #making depth
+            KrootL.append(Frame.Kernals[KernInt][1])
+            KernInt += 1   
+            KernDone = True 
+
+    Kdt = 1
     for i in range(len(LayLis) - 1):
     #while (i < len(LayLis) - 1):
         
@@ -680,14 +688,18 @@ def MakeTxT(Frame):
                 for j in range(LayLis[i]):
 
                     if type(LayLis[i+1]) == str:
-
+                        SetKP = False
                         KRint = 0
-                        Kdt = DepthList[KRint]
+                        #Kdt = 1
                         srtTofile.append([])
                         addtopool = 2
                         ext = 2
+                        #print(KRint)
                         if LayLis[i + 1] != "P":
+                            SetKP = True
+                            Kdt = DepthList[KRint]
                             ext = 3
+
                             if LayLis[i + 1] == "K":
                                 ext = KrootL[KRint]
                                 KRint += 1 
@@ -697,8 +709,12 @@ def MakeTxT(Frame):
 
                             if LayLis[i + addtopool] == "P":
                                 ext += 1
+ 
                             else:
                                 if LayLis[i + addtopool] == "K":
+                                    if not SetKP:
+                                        Kdt = DepthList[KRint]
+                                        SetKP = True
                                     ext += KrootL[KRint] - 1
                                     KRint += 1 
                                 else:
@@ -706,7 +722,7 @@ def MakeTxT(Frame):
 
                             addtopool += 1
 
-                        #print(Kdep)
+
                         MakeThis = int(pow(math.sqrt(LayLis[i + addtopool])-(ext-1), 2)) * Kdt
 
                         for k in range(MakeThis):
@@ -717,8 +733,9 @@ def MakeTxT(Frame):
                     if LayLis[i + 1] == "K":
                         KrootL.pop(0)
                         DepthList.pop(0)
+                    
                     LayLis.pop(i+1)
-
+                    
             else:
                 srtTofile = []
                 for j in range(LayLis[i]):
@@ -747,7 +764,11 @@ def MakeTxT(Frame):
     SavedFrame['Chunk'] = Frame.ChunkNumb
     SavedFrame['LoadingBar'] = Frame.loadbar.__name__
     SavedFrame['Filters'] = str(Frame.Filters)
-    SavedFrame['FiltFun'] =  (Frame.KernalFun)
+    if(type(Frame.KernalFun) != list):
+        SavedFrame['FiltFun'] =  (Frame.KernalFun)
+    else:
+        SavedFrame['FiltFun'] = "[]"
+
     OpenFile = open("NetworkInfo.json", "w")
     json.dump(SavedFrame, OpenFile)
     OpenFile.close()
