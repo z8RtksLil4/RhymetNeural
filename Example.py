@@ -11,7 +11,7 @@ InputOG = images
 
 
 
-NNFrame = NeuralFrame([10, 81, 81, "K", 784], [CalcCost, Relu, Relu, Relu]).SetKernals([(1, 5)])
+NNFrame = NeuralFrame([10, 40, 40, "K", "K", "K", 784], [CalcCost, Swish, Swish, Swish]).SetKernals([(2, 3, Swish), (3, 4, Swish), (4, 6, Swish)])
 MakeTxT(NNFrame)
 
 InputData = []
@@ -26,7 +26,7 @@ for Numb in labels:
     OutputData.append(CalcExpe(Numb))
     
 
-NeuralNetwork(InputData[0:48000], OutputData[0:48000], 480, 100, 0.0045)
+NeuralNetwork(InputData[0:48000], OutputData[0:48000], 480, 100, 0.045)
 #TestingNetwork(InputData[48000:60000], OutputData[48000:60000], 120, 100)
 #print(np.argmax(UseNetwork(InputData[55])))
 #print(np.argmax(OutputData[55]))
