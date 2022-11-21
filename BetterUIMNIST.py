@@ -67,16 +67,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
             input = InputData[CorNum]
-
-
-
-
             Expected = ExpeOutput[CorNum]
-
-
-
-
-
 
             Turned.reverse()
             BiasLis.reverse()
@@ -95,34 +86,16 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
             HereWeGo = []
             TupleList = []
-            PoolTupleList = []
+            #PoolTupleList = []
             BackPropList = []
 
             while (CurInd < len(Turned)):
 
                 while type(curMainList[CurInd + 1]) == str:
 
-                    while curMainList[CurInd + 1] == "P":
-                        if(type(LayN[0]) == float):
-                            LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
-                            PoolTupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
-
-                        Pooled = []
-                        for Dime in LayN:
-                            ChunkedData = PoolAry(2, 2, Dime)
-                            Pooled.append(ChunkedData)
-
-
-                        PoolTupleList.append((len(Pooled), len(Pooled[0]), len(Pooled[0][0])))
-
-                        LayN = Pooled
-                        Layers.append(SuperUnChunk(Pooled))
-
-                        curMainList.pop(CurInd+1)
-                        if(type(curMainList[CurInd + 1]) != str):
-                            LayN = SuperUnChunk(LayN)
-                            PoolTupleList.pop(len(PoolTupleList)-1)
-
+                    if(type(LayN[0]) != list):
+                        LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
+                        TupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
 
                     while curMainList[CurInd + 1] == "C":
                         ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
@@ -136,12 +109,21 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         curMainList.pop(CurInd+1)
                         FiltInt += 1
 
+                    while curMainList[CurInd + 1] == "P":
+                        Pooled = []
+                        for Dime in LayN:
+                            Pooled.append(PoolAry(2, 2, Dime))
+
+                        curMainList.pop(CurInd+1)
+                        if(type(curMainList[CurInd + 1]) != str):
+                            LayN = SuperUnChunk(Pooled)
+                        else:
+                            LayN = Pooled
+                            
+                        Layers.append(LayN)
+
+
                     while curMainList[CurInd + 1] == "K":
-                        if(type(LayN[0]) == float):
-                            LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
-                            TupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
-
-
                         Filtered = []
                         BackFiltered = []
                         for Filter in Kernals[KernInt]:
@@ -149,20 +131,15 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                             Filtered.append(InfoTuple[0])
                             BackFiltered.append(InfoTuple[1])
 
-                        LayN = Filtered
-                        Layers.append(SuperUnChunk(Filtered))
+
                         HereWeGo.append(SuperUnChunk(BackFiltered))
-
-
-                        TupleList.append((len(Filtered), len(Filtered[0]), len(Filtered[0][0])))
                         curMainList.pop(CurInd+1)
-
-                        if(curMainList[CurInd + 1] == "P"):
-                            PoolTupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
-
                         if(type(curMainList[CurInd + 1]) != str):
-                            LayN = SuperUnChunk(LayN)
-                            TupleList.pop(len(TupleList)-1)
+                            LayN = SuperUnChunk(Filtered)
+                        else:
+                            LayN = Filtered
+
+                        Layers.append(LayN)
 
                         KernInt += 1
 
@@ -182,7 +159,8 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             Activations.reverse()
             MainList.reverse()
             BackPropList.reverse()
-            PoolTupleList.reverse()
+            TupleList.reverse()
+            KernsSummed.reverse()
 
             CosLis = CostFunction(Expected, Layers[0])
 
@@ -194,87 +172,69 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             
             l = 0
 
-            KernsSummed.reverse() #Is this wrong?
 
-            #Kernals.reverse() #I am going to be so pissed if this imprves anything
+
             curMainList = copy.deepcopy(MainList)
             FiltInt = 0
             KernInt = 0
             while l < (len(Layers) - 1): #Going Through the Layers
 
-                    if(curMainList[l] == "P"):
-                        Reform = PoolTupleList[0]
-                        CubedCalc = Layers[l+1]
-                        CubedCalc = np.reshape(CubedCalc, Reform).tolist()
+                    if(type(curMainList[l]) == str):
+
 
                         for i in range(len(prevcalc)):
                             prevcalc[i] = SumCheck(prevcalc[i])
 
-                        SplitCalc = BackpropSplitKern(prevcalc,len(CubedCalc))
-                        LayAf = []
+                        CubedCalc = Layers[l+1]
+                        if(type(curMainList[l+1]) != str):
+                            CubedCalc = np.reshape(CubedCalc, TupleList[0]).tolist()
+                            TupleList.pop(0)
 
-                        for i in range(len(CubedCalc)):
-                            LayAf.append(PoolBackProp(2, 2, CubedCalc[i], SplitCalc[i]))
+                        match curMainList[l]:
+
+                            case "C":
+                                LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
+                            
 
 
-                        #LayAf = PoolBackProp(2, 2, LayAf, prevcalc)
-                        prevcalc = SuperUnChunk(LayAf)
-                        PoolTupleList.pop(0)
-                        curMainList.pop(l)
-                        Layers.pop(l)
+                                NewFilter = CombineGrids(Filters[FiltInt])
+                                #Im not sure this works correctly, Come back to this
 
-                    elif(curMainList[l] == "C"):
-                        LayAf = Chunk(Layers[l+1], int(math.sqrt(len(Layers[l+1]))))
+                                LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
+                                prevcalc = UnChunk(LayAf)
+
+                                FiltInt += 1
+                            
+                            case "P":
+                                SplitCalc = BackpropSplitKern(prevcalc,len(CubedCalc))
+                                LayAf = []
+                                for i in range(len(CubedCalc)):
+                                    LayAf.append(PoolBackProp(2, 2, CubedCalc[i], SplitCalc[i]))
+
+                                prevcalc = SuperUnChunk(LayAf)
+
+                            case "K":
+                                BackK = len(Kernals) - 1 - KernInt
+
+                                n = len(prevcalc)
                     
-                        for i in range(len(prevcalc)):
-                            prevcalc[i] = SumCheck(prevcalc[i])
+                                prevcalc = (np.array(HereWeGo[BackK])[:n]*np.array(prevcalc)[:n]).tolist()
 
+                                SavedPre = copy.deepcopy(prevcalc)
+                                SplitCalc = BackpropSplitKern(prevcalc,len(Kernals[BackK]))
+                                prevcalc = SavedPre
 
-                        NewFilter = CombineGrids(Filters[FiltInt])
-                        #Im not sure this works correctly, Come back to this
+                                AHHHHHh = []
+                                for kbp in range(len(KernsSummed[KernInt])):
+                                    KERNBACKPConvolution(CubedCalc, KernsSummed[KernInt][kbp], SplitCalc[kbp])
+                                    AHHHHHh.append(KERNBACKPNORMAL(CubedCalc, Kernals[BackK][kbp], SplitCalc[kbp]))
 
-                        LayAf = ConvolutionBackProp(LayAf, NewFilter, prevcalc)
-                        prevcalc = UnChunk(LayAf)
+                                    
+                                prevcalc = SuperUnChunk(COMBO3D(AHHHHHh))
+                                KernInt += 1
+
                         curMainList.pop(l)
                         Layers.pop(l)
-                        FiltInt += 1
-
-                    elif(curMainList[l] == "K"):
-                        BackK = len(Kernals) - 1 - KernInt
-
-
-                        for i in range(len(prevcalc)):
-                            prevcalc[i] = SumCheck(prevcalc[i])
-
-
-                        n = len(prevcalc)#max(len(prevcalc), len(HereWeGo[BackK]))
-
-                        result = (np.array(HereWeGo[BackK])[:n]*np.array(prevcalc)[:n]).tolist()
-            
-                        prevcalc = result
-
-
-
-                        SavedPre = copy.deepcopy(prevcalc)
-                        SplitCalc = BackpropSplitKern(prevcalc,len(Kernals[BackK]))
-                        prevcalc = SavedPre
-
-
-                        CubedCalc = Layers[l+1]
-                        CubedCalc = np.reshape(CubedCalc, TupleList[BackK]).tolist()
-
-
-                        AHHHHHh = []
-                        for kbp in range(len(KernsSummed[KernInt])):
-                            KERNBACKPConvolution(CubedCalc, KernsSummed[KernInt][kbp], SplitCalc[kbp])
-    
-                            AHHHHHh.append(KERNBACKPNORMAL(CubedCalc, Kernals[BackK][kbp], SplitCalc[kbp]))
-
-
-                        prevcalc = SuperUnChunk(COMBO3D(AHHHHHh))
-                        curMainList.pop(l)
-                        Layers.pop(l)
-                        KernInt += 1
 
                     else:
 
@@ -338,6 +298,7 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
     CostFunction = Sert.CostFunction
     Kernals = Sert.Kernals
     Filters = Sert.Filters
+    FiltFun = Sert.FiltFun
 
     BarMod = BatchVal / 50
 
@@ -398,13 +359,8 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
                 while type(curMainList[CurInd + 1]) == str:
 
-                    while curMainList[CurInd + 1] == "P":
-
-                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-                        ChunkedData = PoolAry(2, 2, ChunkedData)
-                        LayN = UnChunk(ChunkedData)
-                        Layers.append(UnChunk(ChunkedData))
-                        curMainList.pop(CurInd+1)
+                    if(type(LayN[0]) != list):
+                        LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
 
                     while curMainList[CurInd + 1] == "C":
                         ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
@@ -418,16 +374,38 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
                         curMainList.pop(CurInd+1)
                         FiltInt += 1
 
-                    while curMainList[CurInd + 1] == "K":
-                        ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
+                    while curMainList[CurInd + 1] == "P":
+                        Pooled = []
+                        for Dime in LayN:
+                            Pooled.append(PoolAry(2, 2, Dime))
 
-                        Filtered = []
-                        for Filter in Kernals[KernInt]:
-                            Filtered.append(Convolution(LayN, Filter))
-                        CombinedFilters = CombineGrids(Filtered)
-                        LayN = UnChunk(CombinedFilters) 
-                        Layers.append(UnChunk(CombinedFilters))
                         curMainList.pop(CurInd+1)
+                        if(type(curMainList[CurInd + 1]) != str):
+                            LayN = SuperUnChunk(Pooled)
+                        else:
+                            LayN = Pooled
+                            
+                        Layers.append(LayN)
+
+
+                    while curMainList[CurInd + 1] == "K":
+                        Filtered = []
+
+                        for Filter in Kernals[KernInt]:
+                            InfoTuple = KERNConvolution(LayN, Filter, FiltFun[KernInt], DerivativeDic[FiltFun[KernInt]])
+                            Filtered.append(InfoTuple[0])
+
+
+
+
+                        curMainList.pop(CurInd+1)
+                        if(type(curMainList[CurInd + 1]) != str):
+                            LayN = SuperUnChunk(Filtered)
+                        else:
+                            LayN = Filtered
+
+                        Layers.append(LayN)
+
                         KernInt += 1
 
                 LayN = (np.array(ActivationList(np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist()), Activations[CurInd])) + BiasLis[CurInd]).tolist()
@@ -491,7 +469,7 @@ def UseNetwork(InputData):
     Kernals = Sert.Kernals
     FiltFun = Sert.FiltFun
     FiltFun.reverse()
-    print("%")
+
 
 
 
@@ -537,21 +515,13 @@ def UseNetwork(InputData):
     KernInt = 0
 
 
-    HereWeGo = []
-    TupleList = []
-    BackPropList = []
 
     while (CurInd < len(Turned)):
 
         while type(curMainList[CurInd + 1]) == str:
 
-            while curMainList[CurInd + 1] == "P":
-
-                ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-                ChunkedData = PoolAry(2, 2, ChunkedData)
-                LayN = UnChunk(ChunkedData)
-                Layers.append(UnChunk(ChunkedData))
-                curMainList.pop(CurInd+1)
+            if(type(LayN[0]) != list):
+                LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
 
             while curMainList[CurInd + 1] == "C":
                 ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
@@ -565,37 +535,43 @@ def UseNetwork(InputData):
                 curMainList.pop(CurInd+1)
                 FiltInt += 1
 
+            while curMainList[CurInd + 1] == "P":
+                Pooled = []
+                for Dime in LayN:
+                    Pooled.append(PoolAry(2, 2, Dime))
+
+                curMainList.pop(CurInd+1)
+                if(type(curMainList[CurInd + 1]) != str):
+                    LayN = SuperUnChunk(Pooled)
+                else:
+                    LayN = Pooled
+                    
+                Layers.append(LayN)
+
+
             while curMainList[CurInd + 1] == "K":
-                if(type(LayN[0]) == float):
-                    LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
-                    TupleList.append((len(LayN), len(LayN[0]), len(LayN[0][0])))
-
-
                 Filtered = []
-                BackFiltered = []
-                for Filter in Kernals[KernInt]:
 
+                for Filter in Kernals[KernInt]:
                     InfoTuple = KERNConvolution(LayN, Filter, FiltFun[KernInt], DerivativeDic[FiltFun[KernInt]])
                     Filtered.append(InfoTuple[0])
-                    BackFiltered.append(InfoTuple[1])
-
-                LayN = Filtered
-                Layers.append(SuperUnChunk(Filtered))
-                HereWeGo.append(SuperUnChunk(BackFiltered))
 
 
-                TupleList.append((len(Filtered), len(Filtered[0]), len(Filtered[0][0])))
+
+
                 curMainList.pop(CurInd+1)
+                if(type(curMainList[CurInd + 1]) != str):
+                    LayN = SuperUnChunk(Filtered)
+                else:
+                    LayN = Filtered
 
+                Layers.append(LayN)
 
-                if(curMainList[CurInd + 1] != "K"):
-                    LayN = SuperUnChunk(LayN)
-                    TupleList.pop(len(TupleList)-1)
                 KernInt += 1
 
 
         down = np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist())
-        BackPropList.append(down)
+
         LayN = (np.array(ActivationList(down,Activations[CurInd])) + BiasLis[CurInd]).tolist()
         Layers.append(LayN)
         CurInd += 1

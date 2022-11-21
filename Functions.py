@@ -91,46 +91,17 @@ class NeuralFrame:
 
 
 def BlankKernal(KernLis):
-    lenlis = []
     BKerns = []
     for kr in KernLis:
         NewBK = []
         for cde in range(len(kr)):
-
             NewBK.append(np.zeros((len(kr[cde]),len(kr[cde]))).tolist())
         BKerns.append(NewBK)
-
     return BKerns
 
 
-def trnnp(lisdt):
-    newlist = np.zeros((len(lisdt[0]), len(lisdt)))
-    for i in range(len(lisdt)):
-        for j in range(len(lisdt[0])):
-            newlist[j][i] = lisdt[i][j]
-    return newlist
-
-
-def KernalBackProp(CalK, NextLay, OldKern, Lr):
-    Ravel = UnChunk(OldKern)
-    RavelInt = 0
-    for i in range(len(OldKern)):
-        for j in range(len(OldKern)):
-
-            for r in range(len(CalK)):
-                for c in range(len(CalK)):
-                    Ravel[RavelInt] += (NextLay[i+r][j+c] * CalK[r][c]) * Lr
-
-            RavelInt += 1
-
-
-    Ravel = Chunk(Ravel, len(OldKern))
-
-    return Ravel
-
 
 def AddKernal(NewKerns, OldKerns, div):
-
     for i in range(len(NewKerns)):
         for j in range(len(NewKerns[i])):
             for k in range(len(NewKerns[i][j])):
@@ -147,18 +118,9 @@ def AddKernal(NewKerns, OldKerns, div):
 
 def PoolBackProp(Kw, Kh, Image, PrevGradient):
     NewGrad = np.zeros((len(Image[0]),len(Image[0]))).tolist()
-
     PrevGradInd = 0
-    NewImage = []
-
-    for i in range(len(Image) - (Kh - 1)):
-
-        NewRow = []
-        
+    for i in range(len(Image) - (Kh - 1)): 
         for j in range(len(Image[0]) - (Kw - 1)):
-
-
-            
             if (i + Kh) <= len(Image) and (j + Kw) <= len(Image[0]):
 
                 max = Image[i][j]
@@ -171,11 +133,8 @@ def PoolBackProp(Kw, Kh, Image, PrevGradient):
 
                 NewGrad[maxpos[0]][maxpos[1]] += PrevGradient[PrevGradInd]
                 PrevGradInd += 1
-                #NewRow.append(max)
 
-        #NewImage.append(NewRow)
-
-    return (NewGrad)
+    return NewGrad
 
 
 def CombineGrids(GridList):
@@ -220,6 +179,7 @@ def KERNConvolution(Image, IMGfilter, Fun, DxFun):
     NewIMG = []
     BackIMG = []
     FiltLen = len(IMGfilter[0])
+
     for i in range(0, len(Image[0]) - (FiltLen - 1)):
         NewRow = []
         BackRow = []
@@ -228,12 +188,8 @@ def KERNConvolution(Image, IMGfilter, Fun, DxFun):
             for d in range(0,len(IMGfilter)):
                 for r in range(0,FiltLen):
                     for c in range(0,FiltLen):
-                        #print(len(IMGfilter[d]))
-                        #print(len(Image[d]))
                         Total += Image[d][i+r][j+c] * IMGfilter[d][r][c]
 
-            #Why are we doing the absolute value?
-            #I don't know but It makes it work
             NewRow.append(Fun(Total)) 
             BackRow.append(DxFun(Total)) 
         NewIMG.append(NewRow)
@@ -327,12 +283,12 @@ def PoolAry(Kw, Kh, Image):
     for i in range(len(Image) - (Kh - 1)):
 
         NewRow = []
-        #print(len(Image))
+
         for j in range(len(Image[0]) - (Kw - 1)):
 
 
 
-            if (i + Kh) <= len(Image) and (j + Kw) <= len(Image[0]):
+            #if (i + Kh) <= len(Image) and (j + Kw) <= len(Image[0]):
 
                 max = Image[i][j]
 
@@ -377,18 +333,20 @@ def UnChunk(Lis):
     return (newLis)
 
 #Turns a 3D list into a 1D list
+#I timed the numpy verion and this and
+#apperntly looping through the list 
+#is faster then numpys reshape
 def SuperUnChunk(Lis):
-    newLis = []
+    #size = len(Lis) * len(Lis[0]) * len(Lis[0][0])
+    newLis = [] #np.reshape(Lis, (1, size))[0].tolist()
     for i in range(len(Lis)):
-
         for j in range(len(Lis[i])):
-
             for k in range(len(Lis[i][j])):
-
                 newLis.append(Lis[i][j][k])
+    return newLis
 
-    return (newLis)
-
+#Divides a list into equal parts
+#{CubLis - List} {by - # of list to split into}
 def BackpropSplitKern(CubLis, by):
     test = []
     new = int(len(CubLis)/by)
@@ -397,7 +355,6 @@ def BackpropSplitKern(CubLis, by):
         for i in range(new):
             jni.append(CubLis.pop(0))
         test.append(jni)
-
     return test
 
 def CalcCost(Exp, Real):
