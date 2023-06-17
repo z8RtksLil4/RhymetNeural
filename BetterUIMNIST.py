@@ -2,12 +2,26 @@
 import math
 from Functions import * 
 import copy
+from ctypes import cdll
+import ctypes
+
+lib = cdll.LoadLibrary('VectorLib.dylib')
+
+#def CalcPropagationNew(c_i, len_i, plr, pel):
+def CalcPropagationNew(c_i, len_i, plr, pel):
+    ddd = np.array(lib.FeedForwardNew(c_i,len_i, ctypes.c_double(plr), pel)).tolist()
+    return ddd
 
 
-
-
+def CalcPropagation(c_i, len_i):
+    result = np.array(lib.FeedForward(c_i,len_i)).tolist()
+    return result
 
 def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
+    
+
+
+
 
     Sert = Setter()
 
@@ -48,13 +62,36 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             Turned.append((np.array(i).T).tolist())
 
 
+
+
+
+        totalnumb = 0
+        lenlis = []
+        flatweights = []
+        #gets the data we need for c++, but does It backwards so it is correct
+        for i in range(-len(Weights)+1, 1):
+            
+            y = len(Weights[-i])
+            x = len(Weights[-i][0])
+            totalnumb += y
+            flatweights += np.reshape(Weights[-i], (1, x*y))[0].tolist()
+            lenlis.append(y)
+            lenlis.append(x)
+
+
+        lib.FeedForwardNew.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((len(flatweights)+1),)) # REPLACE WITH WEIGHTS 
+        lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
+        c_lenlis = (ctypes.c_double * len(lenlis))(*lenlis)
+        c_flatweights = (ctypes.c_double * len(flatweights))(*flatweights)
+        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), totalnumb, len(InputData[0]))
+
         Cost = 100
 
         BiasNew = FreshBi(BiasLis)
 
 
         WeightsSummed = GetFresh(Weights)
-
+        WeightsSummed2 = GetFresh(Weights)
         KernsSummed = copy.deepcopy(Sert.BlaKernals)
 
         LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
@@ -88,7 +125,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             TupleList = []
             #PoolTupleList = []
             BackPropList = []
-
+            Back_C = []
             while (CurInd < len(Turned)):
 
                 while type(curMainList[CurInd + 1]) == str:
@@ -144,16 +181,31 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                         KernInt += 1
 
                     
+                c_ex = (ctypes.c_double * len(Expected))(*Expected)         
+                c_imp = (ctypes.c_double * len(LayN))(*LayN)                
+                Back_C = CalcPropagationNew(c_imp, len(LayN), LearnRate, c_ex)
+                #res = CalcPropagation(c_imp, len(LayN))
+                #count = len(LayN)
 
-                down = np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist())
+                #print("REMBER TO CHANGE RETRURN TYPE SO IT FITS WEIGHT LIST")
+                #print(9/0)
+                for uhehijo in range(int(len(lenlis)/2)):
+                    '''wm = uhehijo * 2
+                    newf = res[count : count + lenlis[wm]]
+                    newb = res[count + totalnumb: count + lenlis[wm] + totalnumb]
+                    count += lenlis[wm]
+                    Layers.append(newf)
+                    BackPropList.append(newb)'''
+                    CurInd += 1
+
+                '''down = np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist())
                 BackPropList.append(down)
                 LayN = (np.array(ActivationList(down,Activations[CurInd])) + BiasLis[CurInd]).tolist()
-                Layers.append(LayN)
-                CurInd += 1
+                Layers.append(LayN)'''
+                
 
 
-
-            Turned.reverse()
+            '''Turned.reverse()
             BiasLis.reverse()
             Layers.reverse()
             Activations.reverse()
@@ -161,7 +213,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             BackPropList.reverse()
             TupleList.reverse()
             KernsSummed.reverse()
-
+            
             CosLis = CostFunction(Expected, Layers[0])
 
 
@@ -170,14 +222,14 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
             prevcalc = CosLis
             
-            l = 0
+            l = 0'''
 
 
 
             curMainList = copy.deepcopy(MainList)
             FiltInt = 0
             KernInt = 0
-            while l < (len(Layers) - 1): #Going Through the Layers
+            '''while l < (len(Layers) - 1): #Going Through the Layers
 
                     if(type(curMainList[l]) == str):
 
@@ -238,7 +290,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
                     else:
 
-                        TimCal = np.zeros((len(Weights[l][0]), len(Weights[l]))).tolist() 
+                        TimCal = np.zeros((len(Weights[l][0]), )).tolist() 
 
 
                         for n in range(len(Layers[l])): #Going Through the Neurons
@@ -254,23 +306,46 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                                 #LearnRate * (Neuronᴸ⁺¹[w] * Activation′(Neuronⁿ) * (sum(Turnedᴸ⁻¹[n]) or CostFunction(E, R)))
                                 WeightsSummed[l][n][w] += LearnRate * float(Layers[l + 1][w] * LayBackPro)
 
-                                TimCal[w][n] = float(Turned[l][w][n] * LayBackPro)
-
+                                TimCal[w] += float(Turned[l][w][n] * LayBackPro)
+                        
 
                         prevcalc = TimCal
-                        l += 1
+                        l += 1'''
 
-            KernsSummed.reverse()   
 
-            AIaws = FindMax(Layers[0])
-            RLaws = FindMax(Expected)
-            if AIaws == RLaws:
+            count = 0
+            countpo = 0
+            noio = []
+
+
+
+            WeightsSummed2.reverse()
+            #print(Back_C[0:784]) #Okay second layer is not propagating #We need to figure out why this is happening
+
+            for point in range(0,len(lenlis),2):
+                y = lenlis[point]
+                x = lenlis[point + 1]
+                noio = np.reshape(Back_C[count:(count+(x*y))], (y, x)).tolist()
+
+                for m in range(y):
+                    for n in range(x):
+
+                        WeightsSummed2[countpo][m][n] += noio[m][n] 
+
+                count += (x * y)
+                countpo += 1
+
+            WeightsSummed2.reverse()
+
+            #print(WeightsSummed2[1][80])
+
+            #print(WeightsSummed[1][80])
+            if Back_C[len(flatweights)] == 1:
                 PreCor += 1
 
 
             if Numbers % BarMod < 1:
                 LoadingPro = Sert.LoadingBar(LoadingPro)
-
 
 
 
@@ -281,7 +356,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
         print("\n")
         AddKernal(KernsSummed, Kernals, BatchValTrue)
-        OldLayer = AddTxT((WeightsSummed, BiasNew), OldLayer, BatchValTrue)
+        OldLayer = AddTxT((WeightsSummed2, BiasNew), OldLayer, BatchValTrue)
 
 
     print("Program ended, Training Complete")
@@ -583,3 +658,9 @@ def UseNetwork(InputData):
     MainList.reverse()
 
     return Layers[0]
+
+
+
+
+
+

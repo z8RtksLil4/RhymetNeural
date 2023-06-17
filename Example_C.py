@@ -12,24 +12,28 @@ InputOG = images
 
 
 
-NNFrame = NeuralFrame([10, 64, 64, "P", "K", 784], [CalcCost, Swish, Swish, Swish]).SetKernals([(3, 10, Swish)])
+NNFrame = NeuralFrame([10, 81, 784], [CalcCost, Sigmoid, Sigmoid])
 MakeTxT(NNFrame)
 
-
-InputData = []
-for Things in InputOG:
-    newli = []
-    for uijk in Things:
-        newli.append(uijk/255)
-    InputData.append(newli)
 
 OutputData = []
 for Numb in labels:
     OutputData.append(CalcExpe(Numb))
 
-    
+import time
 
-NeuralNetwork(InputData[0:48000], OutputData[0:48000], 3, 100, 0.045)
+start = time.time()
+
+
+NeuralNetwork(InputOG[0:48000], OutputData[0:48000], 100, 100, 0.065)
+
+end = time.time()
+print("Time: " + str(end - start))
+
+#97.75992226600647
+
+
+
 #TestingNetwork(InputData[48000:60000], OutputData[48000:60000], 1, 100)
 #print(np.argmax(UseNetwork(InputData[49533])))
 

@@ -1,1 +1,1 @@
-{"Neurons": [10, 40, 40, "K", "K", "K", 784], "Activtions": "[Swish, Swish, Swish]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]", "FiltFun": "[Swish, Swish, Swish]"}
+{"Neurons": [10, 81, 784], "Activtions": "[Sigmoid, Sigmoid]", "CostFunction": "CalcCost", "Pooling": 0, "Chunk": 0, "LoadingBar": "LoadingBarPre", "Filters": "[]", "FiltFun": "[]"}
