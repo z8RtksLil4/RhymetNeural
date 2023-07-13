@@ -19,6 +19,7 @@ def CalcPropagation(c_i, len_i):
 
 def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
     
+ 
 
 
 
@@ -40,10 +41,11 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
     Activations = []
     for Act in Sert.Activtions:
         if type(Act) != str:
+            print(Act.__name__)
             Activations.append(Act)
 
 
-
+  
     BarMod = BatchVal / 50
 
 
@@ -80,10 +82,10 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
         lib.FeedForwardNew.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((len(flatweights)+1),)) # REPLACE WITH WEIGHTS 
-        lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
+        #lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
         c_lenlis = (ctypes.c_double * len(lenlis))(*lenlis)
         c_flatweights = (ctypes.c_double * len(flatweights))(*flatweights)
-        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), totalnumb, len(InputData[0]))
+        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), totalnumb, len(InputData[0]))#len(InputData[0]))
 
         Cost = 100
 
@@ -128,7 +130,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             Back_C = []
             while (CurInd < len(Turned)):
 
-                while type(curMainList[CurInd + 1]) == str:
+                '''while type(curMainList[CurInd + 1]) == str:
 
                     if(type(LayN[0]) != list):
                         LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
@@ -178,12 +180,12 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
                         Layers.append(LayN)
 
-                        KernInt += 1
+                        KernInt += 1'''
 
                     
                 c_ex = (ctypes.c_double * len(Expected))(*Expected)         
                 c_imp = (ctypes.c_double * len(LayN))(*LayN)                
-                Back_C = CalcPropagationNew(c_imp, len(LayN), LearnRate, c_ex)
+                Back_C = CalcPropagationNew(c_imp, len(InputData[0]), LearnRate, c_ex)
                 #res = CalcPropagation(c_imp, len(LayN))
                 #count = len(LayN)
 

@@ -12,7 +12,7 @@ InputOG = images
 
 
 
-NNFrame = NeuralFrame([10, 81, 784], [CalcCost, Sigmoid, Sigmoid])
+NNFrame = NeuralFrame([10, 81, 784], [CalcCost, Swish, Swish])
 MakeTxT(NNFrame)
 
 
