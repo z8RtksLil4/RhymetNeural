@@ -62,20 +62,33 @@ struct NNList
     }
 };
 
-struct Box
+struct Point
 {
-    vector<double> lis;
     int X;
     int Y;
     int Z;
-    Box(vector<double> inl, int x_, int y_, int z_)
+    Point(int x_, int y_, int z_)
     {
-        lis = inl;
         X = x_;
         Y = y_;
         Z = z_;
     }
 };
+
+
+
+struct Box : Point
+{
+    vector<double> lis;
+    Box(vector<double> inl, int x_, int y_, int z_) : Point(x_, y_, z_)
+    {
+        lis = inl;
+    }
+};
+
+
+
+
 
 vector<double> Cost(double Expected[], vector<double> Real)
 {
@@ -88,7 +101,7 @@ vector<double> Cost(double Expected[], vector<double> Real)
     return RetCost;
 }
 
-vector<double> PoolMethodDimKeep(Box Over, Box Pool)
+vector<double> PoolMethodDimKeep(Box Over, Point Pool)
 {
     int S1 = Pool.X - 1;
 
@@ -104,7 +117,7 @@ vector<double> PoolMethodDimKeep(Box Over, Box Pool)
         for(int ijn = 0; ijn < NewPoolDim; ijn++)
         {
             Pindex = ((Pindex + S1) % Over.X) == 0 ? (Pindex + S1) : Pindex;
-            double tot = Over.lis[Nindex + W];
+            double tot = Over.lis[Pindex + W];
             for(int i = 0; i < Pool.X; i++)
             {
                 int R = Pindex + i;
@@ -123,6 +136,47 @@ vector<double> PoolMethodDimKeep(Box Over, Box Pool)
         }
     }
     return PooledList;
+}
+
+vector<double> PoolBackprop(Box Over, Point Pool, vector<double> InCalc)
+{
+    int S1 = Pool.X - 1;
+  
+    int NewPoolDim = (Over.X-S1) * (Over.Y-S1);
+    int FullSet = Over.X * Over.Y;
+    vector<double> BackedList(Over.X * Over.Y * Over.Z);
+
+    for(int k = 0; k < Over.Z; k++)
+    {
+        int Pindex = 0;
+        int Nindex = 0;
+        int W = k * FullSet;
+        for(int ijn = 0; ijn < NewPoolDim; ijn++)
+        {
+            
+            Pindex = ((Pindex + S1) % Over.X) == 0 ? (Pindex + S1) : Pindex;
+            double tot = Over.lis[Pindex + W];
+            int PlaceProp = Pindex;
+            for(int i = 0; i < Pool.X; i++)
+            {
+                int R = Pindex + i;
+                for(int j = 0; j < Pool.Y; j++)
+                {
+                    int C = j * Over.X;
+                    if(Over.lis[C+R+W] > tot)
+                    {
+                        tot = Over.lis[C+R+W];
+                        PlaceProp = C+R+W;
+                    }
+
+                }
+            }
+            Pindex += 1;
+            BackedList[PlaceProp] += InCalc[Nindex];
+            Nindex += 1;
+        }
+    }
+    return BackedList;
 }
 
 
@@ -186,7 +240,7 @@ extern "C"
 
     NNList Weights = NNList(new double, 0.0);
     NNList Lengths = NNList(new double, 0.0);
-
+    NNList Layers = NNList(new double, 0.0);
 
 
     double *BackWeights;
@@ -195,7 +249,7 @@ extern "C"
 
 
     unordered_map<string, double(*)(double, bool)> Actmap;
-    void PushNewWeights(double W_in[], double L_in[], int wl, int ll, int sl, int bl)
+    void PushNewWeights(double W_in[], double L_in[], int wl, int ll, int sl, int bl, double LM_in[], int lml)
     {
         //This should be put in a sperate function only called at the start
         Actmap["Sigmoid"] = &Sigmoid;
@@ -206,6 +260,9 @@ extern "C"
         
         Weights = NNList(W_in, wl);
         Lengths = NNList(L_in, ll);
+        Layers = NNList(LM_in, lml);
+        
+        
         staur = sl;
         backnur = bl;
         delete BackWeights;
@@ -226,26 +283,50 @@ extern "C"
         returndata.push_back(Input);
         puredata.push_back(vector<double>(2));
 
-        for(int Lendex = 0; Lendex < Lengths.len; Lendex += 2)
+        int Lendex = 0;
+
+        for(int L = 0; L < Layers.len; L++)
         {
-            vector<double> replacev(Lengths.lis[Lendex]);
-            vector<double> replaceb(Lengths.lis[Lendex]);
-            //y, should be in backprop and forward
-            for(int i = 0; i < Lengths.lis[Lendex]; i++)
+
+            vector<double> replacev;
+            vector<double> replaceb;
+
+            if(Layers.lis[L] == -1) //Change this for a switch statement eventually
             {
-                double total = 0;
-                //x
-                for(int j = 0; j < Lengths.lis[Lendex+1]; j++)
-                {
-                    total += Input[j] * Weights.lis[Index];
-                    Index += 1;
-                }
-                replacev[i] = Actmap["Swish"](total, 0); //Replace this with the function that does the thing
-                replaceb[i] = total;
+                
+                int dimepre = sqrt(Input.size()); //Replace 1 with pool size later
+                Box IntoPool = Box(Input, dimepre, dimepre, 1); //The one for z will have to change but for testing it will do
+                Point PoolData = Point(2, 2, 1);
+                replacev = PoolMethodDimKeep(IntoPool, PoolData);
+                replaceb = replacev; //Might have to change this later
             }
+            else
+            {
+                replacev = vector<double>(Lengths.lis[Lendex]);
+                replaceb = vector<double>(Lengths.lis[Lendex]);
+                //y, should be in backprop and forward
+                for(int i = 0; i < Lengths.lis[Lendex]; i++)
+                {
+                    double total = 0;
+                    //x
+                    for(int j = 0; j < Lengths.lis[Lendex+1]; j++)
+                    {
+                        total += Input[j] * Weights.lis[Index];
+                        Index += 1;
+                    }
+                    replacev[i] = Actmap["Swish"](total, 0); //Replace this with the function that does the thing
+                    replaceb[i] = total;
+                }
+                
+                Lendex += 2;
+            }
+            
+            
             Input = replacev;
             returndata.push_back(replacev);
             puredata.push_back(replaceb);
+            
+            
         }
 
         
@@ -261,6 +342,7 @@ extern "C"
         BackWeights[Index] = 0;
         for(int i = 0; i < int(prevcalc.size()); i++)
         {
+            //cout << Input[i] << " ";
             if(Input[i] > maxp)
             {
                 maxp = Input[i];
@@ -280,29 +362,47 @@ extern "C"
         
         
         int LayerNumb = returndata.size()-1;
-        for(int Lenbac = Lengths.len - 1; Lenbac >= 1; Lenbac -= 2)
+        int Lenbac = Lengths.len - 1;
+        
+        for(int L = Layers.len - 1; L >= 0; L--)
         {
-            int x = Lengths.lis[Lenbac];
-            int y = Lengths.lis[Lenbac-1];
-            //cout << x << " " << y << " ";
-            vector<double> newcalc(x);
-            for(int i = (y-1); i >= 0; i--)
+            vector<double> newcalc;
+            //REMBER TO CHECK IF THERE ARE ANY MORE IN THE LENBAC IN THE FINAL VERSION
+            if(Layers.lis[L] == -1 && Lenbac > 1) //Change this for a switch statement eventually
             {
-                double NeronCalculus = Actmap["Swish"](puredata[LayerNumb][i], 1) * prevcalc[i];
                 
-                for(int j = (x-1); j >= 0; j--)
-                {
-                    //ITS NO SUBRATING PREVIUS LAYERS FROM X
-
-                    Index -= 1;
-                    BackWeights[Index] = LearnRate * NeronCalculus * returndata[LayerNumb-1][j]; //Rember to put
-                    newcalc[j] += (Weights.lis[Index] * NeronCalculus);
-
-                }
+                int dimeaft = sqrt(returndata[LayerNumb-1].size()); //Replace 1 with pool size later
+                Box OuttoPool = Box(returndata[LayerNumb-1], dimeaft, dimeaft, 1); //The one for z will have to change but for testing it will do
+                Point PoolData = Point(2, 2, 1);
+                newcalc = PoolBackprop(OuttoPool, PoolData, prevcalc);
+                
             }
-
+            else
+            {
+                int x = Lengths.lis[Lenbac];
+                int y = Lengths.lis[Lenbac-1];
+                newcalc = vector<double>(x);
+                for(int i = (y-1); i >= 0; i--)
+                {
+                    double NeronCalculus = Actmap["Swish"](puredata[LayerNumb][i], 1) * prevcalc[i];
+                    
+                    for(int j = (x-1); j >= 0; j--)
+                    {
+                        //ITS NO SUBRATING PREVIUS LAYERS FROM X
+                        
+                        Index -= 1;
+                        BackWeights[Index] = LearnRate * NeronCalculus * returndata[LayerNumb-1][j]; //Rember to put
+                        newcalc[j] += (Weights.lis[Index] * NeronCalculus);
+                        
+                    }
+                }
+                Lenbac -= 2;
+            }
+            
             prevcalc = newcalc;
             LayerNumb -= 1;
+            
+
         }
             
 

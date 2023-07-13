@@ -71,21 +71,43 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
         lenlis = []
         flatweights = []
         #gets the data we need for c++, but does It backwards so it is correct
-        for i in range(-len(Weights)+1, 1):
-            
+
+        Killnum = -(len(Weights)-1)
+        CLayList = []
+        prey = MainList[-1]
+        for i in range(-len(MainList)+2, 1):
+            if(MainList[-i] == "P"):
+                CLayList.append(-1)
+                NewRoot = math.sqrt(prey)-1
+                totalnumb += NewRoot*NewRoot
+            else:
+                y = len(Weights[-Killnum])
+                x = len(Weights[-Killnum][0])
+                totalnumb += y
+                flatweights += np.reshape(Weights[-Killnum], (1, x*y))[0].tolist()
+                lenlis.append(y)
+                lenlis.append(x)
+                CLayList.append(1)
+                Killnum += 1
+
+
+
+        '''for i in range(-len(Weights)+1, 1):
             y = len(Weights[-i])
             x = len(Weights[-i][0])
             totalnumb += y
             flatweights += np.reshape(Weights[-i], (1, x*y))[0].tolist()
             lenlis.append(y)
-            lenlis.append(x)
+            lenlis.append(x)'''
+
 
 
         lib.FeedForwardNew.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((len(flatweights)+1),)) # REPLACE WITH WEIGHTS 
         #lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
         c_lenlis = (ctypes.c_double * len(lenlis))(*lenlis)
         c_flatweights = (ctypes.c_double * len(flatweights))(*flatweights)
-        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), totalnumb, len(InputData[0]))#len(InputData[0]))
+        C_LayList = (ctypes.c_double * len(CLayList))(*CLayList)
+        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), int(totalnumb), len(InputData[0]), C_LayList, len(CLayList))#len(InputData[0]))
 
         Cost = 100
 
@@ -320,10 +342,10 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             noio = []
 
 
-
+            #print(len(Back_C))
             WeightsSummed2.reverse()
             #print(Back_C[0:784]) #Okay second layer is not propagating #We need to figure out why this is happening
-
+            #print(len(Back_C))
             for point in range(0,len(lenlis),2):
                 y = lenlis[point]
                 x = lenlis[point + 1]
