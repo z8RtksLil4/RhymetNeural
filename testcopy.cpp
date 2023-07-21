@@ -179,6 +179,73 @@ vector<double> PoolBackprop(Box Over, Point Pool, vector<double> InCalc)
     return BackedList;
 }
 
+vector<double> Convolution(Box Over, Box Convo)
+{
+    int S1 = Convo.X - 1;
+    int Pindex = 0;
+    int Nindex = 0;
+    int NewPoolDim = (Over.X-S1) * (Over.Y-S1); //REMBER, CHANGE THIS IF INCLUDE KERNAL SHAPE
+    int FullSet = Over.X * Over.Y;
+    int ConSet = Convo.X * Convo.Y;
+    vector<double> PooledList(NewPoolDim);
+
+    for(int ijn = 0; ijn < NewPoolDim; ijn++)
+    {
+        double tot = 0;
+        Pindex = ((Pindex + S1) % Over.X) == 0 ? (Pindex + S1) : Pindex;
+        for(int i = 0; i < Convo.X; i++)
+        {
+            int R = Pindex + i;
+            for(int j = 0; j < Convo.Y; j++) //Rember because of the way we did it that it kinda goes sideways with y going first but it still works correctly
+            {
+                int C = j * Over.X;
+                for(int k = 0; k < Over.Z; k++)
+                {
+                    int W = k * FullSet;
+                    tot += Over.lis[C+R+W] * Convo.lis[i+(j*Convo.X)+(k*ConSet)];
+                }
+            }
+        }
+        Pindex += 1;
+        PooledList[Nindex] = tot;
+        Nindex += 1;
+    }
+    return PooledList;
+}
+
+vector<double> ConvolutionBackprop(Box Over, Box Convo, vector<double> InCalc, vector<double> EstCalc)
+{
+    int S1 = Convo.X - 1;
+    int Pindex = 0;
+    int Nindex = 0;
+    int NewPoolDim = (Over.X-S1) * (Over.Y-S1); //REMBER, CHANGE THIS IF INCLUDE KERNAL SHAPE
+    int FullSet = Over.X * Over.Y;
+    int ConSet = Convo.X * Convo.Y;
+    
+    //vector<double> BackedList(Over.X * Over.Y * Over.Z);
+
+    for(int ijn = 0; ijn < NewPoolDim; ijn++)
+    {
+        double tot = 0;
+        Pindex = ((Pindex + S1) % Over.X) == 0 ? (Pindex + S1) : Pindex;
+        for(int i = 0; i < Convo.X; i++)
+        {
+            int R = Pindex + i;
+            for(int j = 0; j < Convo.Y; j++) //Rember because of the way we did it that it kinda goes sideways with y going first but it still works correctly
+            {
+                int C = j * Over.X;
+                for(int k = 0; k < Over.Z; k++)
+                {
+                    int W = k * FullSet;
+                    EstCalc[C+R+W] += Convo.lis[i+(j*Convo.X)+(k*ConSet)] * InCalc[Nindex];
+                }
+            }
+        }
+        Pindex += 1;
+        Nindex += 1;
+    }
+    return EstCalc;
+}
 
 extern "C"
 {
@@ -241,15 +308,15 @@ extern "C"
     NNList Weights = NNList(new double, 0.0);
     NNList Lengths = NNList(new double, 0.0);
     NNList Layers = NNList(new double, 0.0);
-
+    NNList Depth = NNList(new double, 0.0);
 
     double *BackWeights;
-    int staur;
-    int backnur;
+    //int staur;
+    //int backnur;
 
 
     unordered_map<string, double(*)(double, bool)> Actmap;
-    void PushNewWeights(double W_in[], double L_in[], int wl, int ll, int sl, int bl, double LM_in[], int lml)
+    void PushNewWeights(double W_in[], double L_in[], int wl, int ll, double LM_in[], int lml, double Z_in[], int zl)
     {
         //This should be put in a sperate function only called at the start
         Actmap["Sigmoid"] = &Sigmoid;
@@ -261,10 +328,10 @@ extern "C"
         Weights = NNList(W_in, wl);
         Lengths = NNList(L_in, ll);
         Layers = NNList(LM_in, lml);
+        Depth = NNList(Z_in, zl);
         
-        
-        staur = sl;
-        backnur = bl;
+        //staur = sl;
+        //backnur = bl;
         delete BackWeights;
         //returndata = (double*) malloc((staur+backnur) * 2 * sizeof(double));
         BackWeights = (double*) malloc((wl+1) * sizeof(double));
@@ -284,14 +351,42 @@ extern "C"
         puredata.push_back(vector<double>(2));
 
         int Lendex = 0;
-
+        int Zind = 0;
         for(int L = 0; L < Layers.len; L++)
         {
 
             vector<double> replacev;
             vector<double> replaceb;
 
-            if(Layers.lis[L] == -1) //Change this for a switch statement eventually
+            
+            if(Layers.lis[L] == -2) //Change this for a switch statement eventually
+            {
+                //Add a for loop for the layers with more then one Convo
+                int howmany = Lengths.lis[Lendex+2];
+
+                int dimepre = sqrt((Input.size()/Depth.lis[Zind])); //Divided
+                Box IntoConvo = Box(Input, dimepre, dimepre, Depth.lis[Zind]);
+                int ConWeightAdd = Lengths.lis[Lendex] * Lengths.lis[Lendex+1] * Depth.lis[Zind];
+                
+                for(int i = 0; i < howmany; i++)
+                {
+                    
+                    vector<double> ConvoSet(Weights.lis+Index, Weights.lis+Index+ConWeightAdd);
+                    
+                    Box ConvoData = Box(ConvoSet, Lengths.lis[Lendex], Lengths.lis[Lendex+1], Depth.lis[Zind]);
+                    
+                    vector<double> ConvodPic = Convolution(IntoConvo, ConvoData);
+                    replacev.insert( replacev.end(), ConvodPic.begin(), ConvodPic.end() );
+                    replaceb = replacev; //Lets try it without Convo functions for now but we can change this later
+                    Index += ConWeightAdd;
+                }
+
+                Zind += 1;
+                Lendex += 3;
+
+                
+            }
+            else if(Layers.lis[L] == -1) //Change this for a switch statement eventually
             {
                 
                 int dimepre = sqrt(Input.size()); //Replace 1 with pool size later
@@ -368,7 +463,56 @@ extern "C"
         {
             vector<double> newcalc;
             //REMBER TO CHECK IF THERE ARE ANY MORE IN THE LENBAC IN THE FINAL VERSION
-            if(Layers.lis[L] == -1 && Lenbac > 1) //Change this for a switch statement eventually
+            if(Layers.lis[L] == -2) //Change this for a switch statement eventually
+            {
+                Zind -= 1;
+                int howmany = Lengths.lis[Lenbac];
+                int x = Lengths.lis[Lenbac-1];
+                int y = Lengths.lis[Lenbac-2];
+                
+
+
+                int BreakCal = prevcalc.size()/howmany;
+                
+                
+                int dimeaft = sqrt(returndata[LayerNumb-1].size()/Depth.lis[Zind]);
+                Box OuttoConv = Box(returndata[LayerNumb-1], dimeaft, dimeaft, Depth.lis[Zind]);
+                newcalc = vector<double>(returndata[LayerNumb-1].size());
+                for(int i = 0; i < howmany; i++)
+                {
+                    vector<double> Splitcalc(prevcalc.begin()+(i*BreakCal), prevcalc.begin()+((i+1)*BreakCal));
+                    int calcaft = sqrt(Splitcalc.size()/Depth.lis[Zind]);  //How do we find how many kernals?
+                    Box ShapedCalc = Box(Splitcalc, calcaft, calcaft, Depth.lis[Zind]);  //How do we find how many kernals?
+                    
+                    
+                    int ConWeightMin = x * y * Depth.lis[Zind];
+                    
+                    
+                    vector<double> ConvoProp = Convolution(OuttoConv, ShapedCalc);
+                    for(int i = 0; i < ConWeightMin; i++)
+                    {
+                        BackWeights[(Index-ConWeightMin)+i] = ConvoProp[i] * LearnRate;
+                    }
+                    
+                    
+                    
+                    vector<double> ConvoSet(Weights.lis+Index-ConWeightMin, Weights.lis+Index);
+                    Box ConvoData = Box(ConvoSet, x, y, Depth.lis[Zind]);
+                    
+                    newcalc = ConvolutionBackprop(OuttoConv, ConvoData, Splitcalc, newcalc);
+
+
+                    //newcalc.insert( newcalc.end(), CONbp.begin(), CONbp.end() );
+                    //cout << newcalc.size() << "\n";
+                    //cout << returndata[LayerNumb-1].size() << "\n";
+                    Index -= ConWeightMin;
+                }
+                
+                //cout << dimeaft << " " << Depth.lis[Zind] << " " << howmany << "\n";
+                Lenbac -= 3;
+                
+            }
+            else if(Layers.lis[L] == -1 && Lenbac > 1) //Change this for a switch statement eventually
             {
                 
                 int dimeaft = sqrt(returndata[LayerNumb-1].size()); //Replace 1 with pool size later
@@ -404,9 +548,7 @@ extern "C"
             
 
         }
-            
-
-
+    
         //You don't need to delete the data every time because you are chaning it
         return BackWeights;
     }

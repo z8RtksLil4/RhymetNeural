@@ -13,8 +13,8 @@ InputOG = images
 
 
 
-NNFrame = NeuralFrame([10, 81, "P", 784], [CalcCost, Swish, Swish])
-MakeTxT(NNFrame)
+NNFrame = NeuralFrame([10, 81, "K", "K", 784], [CalcCost, Swish, Swish]).SetKernals([(2,3),(4,9)])
+#MakeTxT(NNFrame)
 
 
 InputData = []
@@ -36,7 +36,7 @@ import time
 
 start = time.time()
 
-NeuralNetwork(InputData[0:48000], OutputData[0:48000], 100, 100, 0.045)
+NeuralNetwork(InputData[0:48000], OutputData[0:48000], 480, 100, 0.015)
 
 
 end = time.time()
