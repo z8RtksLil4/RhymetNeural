@@ -12,6 +12,12 @@ def CalcPropagationNew(c_i, len_i, plr, pel):
     ddd = np.array(lib.FeedForwardNew(c_i,len_i, ctypes.c_double(plr), pel)).tolist()
     return ddd
 
+def GetUseNet(c_i, len_i, plr, pel):
+    ddd = lib.UseTheNetwork(c_i,len_i, ctypes.c_double(plr), pel)
+    print(ddd)
+    return ddd
+
+
 
 def CalcPropagation(c_i, len_i):
     result = np.array(lib.FeedForward(c_i,len_i)).tolist()
@@ -124,6 +130,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
 
 
         lib.FeedForwardNew.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((len(flatweights)+1),)) # REPLACE WITH WEIGHTS 
+        #lib.UseTheNetwork.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((26),)) # REPLACE WITH WEIGHTS 
         #lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
         c_lenlis = (ctypes.c_double * len(lenlis))(*lenlis)
         c_flatweights = (ctypes.c_double * len(flatweights))(*flatweights)
@@ -132,7 +139,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
         lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), C_LayList, len(CLayList), C_ZList, len(ZList))#len(InputData[0]))
 
         Cost = 100
-
+  
         BiasNew = FreshBi(BiasLis)
 
 
@@ -230,12 +237,16 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
                 c_ex = (ctypes.c_double * len(Expected))(*Expected)         
                 c_imp = (ctypes.c_double * len(LayN))(*LayN)                
                 Back_C = CalcPropagationNew(c_imp, len(InputData[0]), LearnRate, c_ex)
+
+
+
                 #res = CalcPropagation(c_imp, len(LayN))
                 #count = len(LayN)
 
+
                 #print("REMBER TO CHANGE RETRURN TYPE SO IT FITS WEIGHT LIST")
                 #print(9/0)
-                for uhehijo in range(int(len(lenlis)/2)):
+                for uhehijo in range(int(len(lenlis)/2)):  #??? Wtf is this
                     '''wm = uhehijo * 2
                     newf = res[count : count + lenlis[wm]]
                     newb = res[count + totalnumb: count + lenlis[wm] + totalnumb]
@@ -415,7 +426,7 @@ def NeuralNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue, LearnRate):
             MainList.reverse()
             #print(WeightsSummed2[1][80])
 
-            #print(WeightsSummed[1][80])
+
             if Back_C[len(flatweights)] == 1:
                 PreCor += 1
 
@@ -608,135 +619,265 @@ def TestingNetwork(InputData, ExpeOutput, TrainingVal, BatchValTrue):
 
 
 
-def UseNetwork(InputData):
+def UseNetwork(InputData, JunkDat):
+   
+ 
 
+
+    BatchValTrue = 1
+    TrainingVal = 1
 
     Sert = Setter()
 
-
+    BatchVal = abs(BatchValTrue)
     MainList = Sert.Neurons
     CostFunction = Sert.CostFunction
     Filters = Sert.Filters
     Kernals = Sert.Kernals
     FiltFun = Sert.FiltFun
     FiltFun.reverse()
+    print("%")
 
 
 
-
-
+    BarMod = BatchVal / 50
     Activations = []
     for Act in Sert.Activtions:
         if type(Act) != str:
+            print(Act.__name__)
             Activations.append(Act)
 
 
+  
+    BarMod = BatchVal / 50
+
+
+
+    for MNnum in range(TrainingVal):
+
+
+        PreCor = 0
+
+
+
+        Weights, BiasLis = GetTxT(MainList)
+        OldLayer = (Weights, BiasLis)
+        Turned = []
+        for i in Weights:
+            Turned.append((np.array(i).T).tolist())
 
 
 
 
 
+        totalnumb = 0
+        lenlis = []
+        flatweights = []
+        #gets the data we need for c++, but does It backwards so it is correct
+
+        Killnum = -(len(Weights)-1)
+        Convonum = 0
+        ZList = []
+        CLayList = []
+        prey = MainList[-1]
+        #print(MainList)
+        for i in range(-len(MainList)+2, 1):
+            if(MainList[-i] == "K"): #Rember to include how the depth of the kernal is supposed to be 
+                '''print(len(Kernals[0])) #Nummber of convos to apply to prev layer
+                print(len(Kernals[0][0])) #z
+                print(len(Kernals[0][0][0])) #x
+                print(len(Kernals[0][0][0][0])) #y'''
+                dep = len(Kernals[Convonum])
+                y = len(Kernals[Convonum][0][0][0])
+                x = len(Kernals[Convonum][0][0]) 
+                z = len(Kernals[Convonum][0])
+                lenlis.append(y)
+                lenlis.append(x)
+                lenlis.append(dep) #keep this in mind 
+                ZList.append(z)
+                for k in range(dep):
+                    flatweights += np.reshape(Kernals[Convonum][k], (1, x*y*z))[0].tolist() #Eventually replace 0 with an i for loop that goes through all Convos
+                CLayList.append(-2)
+                Convonum += 1
+
+            elif(MainList[-i] == "P"):
+                CLayList.append(-1)
+                #NewRoot = math.sqrt(prey)-1
+                #totalnumb += NewRoot*NewRoot
+            else:
+                y = len(Weights[-Killnum])
+                x = len(Weights[-Killnum][0])
+                #totalnumb += y
+                flatweights += np.reshape(Weights[-Killnum], (1, x*y))[0].tolist()
+                lenlis.append(y)
+                lenlis.append(x)
+                CLayList.append(1)
+                Killnum += 1
 
 
-    PreCor = 0
+
+        '''for i in range(-len(Weights)+1, 1):
+            y = len(Weights[-i])
+            x = len(Weights[-i][0])
+            totalnumb += y
+            flatweights += np.reshape(Weights[-i], (1, x*y))[0].tolist()
+            lenlis.append(y)
+            lenlis.append(x)'''
 
 
 
-    Weights, BiasLis = GetTxT(MainList)
-    OldLayer = (Weights, BiasLis)
-    Turned = []
-    for i in Weights:
-        Turned.append((np.array(i).T).tolist())
+        lib.FeedForwardNew.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_int) #n # REPLACE WITH WEIGHTS 
+        #lib.UseTheNetwork.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((26),)) # REPLACE WITH WEIGHTS 
+        #lib.FeedForward.restype = np.ctypeslib.ndpointer(dtype=ctypes.c_double, shape=((totalnumb + len(InputData[0]))*2,)) # REPLACE WITH WEIGHTS 
+        c_lenlis = (ctypes.c_double * len(lenlis))(*lenlis)
+        c_flatweights = (ctypes.c_double * len(flatweights))(*flatweights)
+        C_LayList = (ctypes.c_double * len(CLayList))(*CLayList)
+        C_ZList = (ctypes.c_double * len(ZList))(*ZList)
+        lib.PushNewWeights(c_flatweights, c_lenlis, len(flatweights), len(lenlis), C_LayList, len(CLayList), C_ZList, len(ZList))#len(InputData[0]))
+
+        Cost = 100
+  
+        BiasNew = FreshBi(BiasLis)
 
 
+        #WeightsSummed = GetFresh(Weights)
+        WeightsSummed2 = GetFresh(Weights)
+        KernsSummed = copy.deepcopy(Sert.BlaKernals)
+
+        LoadUn = "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░⦘"
+        LoadingPro = ""
+
+        for Numbers in range(BatchVal):
+
+            #THIS IS VERY IMPORTANT
+            CorNum = (MNnum * BatchVal) + Numbers
 
 
-    Turned.reverse()
-    BiasLis.reverse()
-    Activations.reverse()
-    MainList.reverse()
+            input = InputData[CorNum]
+            Expected = JunkDat[CorNum]
 
-    Layers = [InputData]
-    LayN = InputData
-    #This is using the network itself
-    CurInd = 0
-    curMainList = copy.deepcopy(MainList)
+            Turned.reverse()
+            BiasLis.reverse()
+            Activations.reverse()
+            #MainList.reverse()
 
-    FiltInt = 0
-    KernInt = 0
+            Layers = [input]
+            LayN = input
+            #This is using the network itself
+            CurInd = 0
+            curMainList = copy.deepcopy(MainList)
+
+            FiltInt = 0
+            KernInt = 0
 
 
+            HereWeGo = []
+            TupleList = []
+            #PoolTupleList = []
+            BackPropList = []
+            Back_C = []
+            while (CurInd < len(Turned)):
 
-    while (CurInd < len(Turned)):
-
-        while type(curMainList[CurInd + 1]) == str:
-
-            if(type(LayN[0]) != list):
-                LayN = [Chunk(LayN, int(math.sqrt(len(LayN))))]
-
-            while curMainList[CurInd + 1] == "C":
-                ChunkedData = Chunk(LayN, int(math.sqrt(len(LayN))))
-
-                Filtered = []
-                for Filter in Filters[FiltInt]:
-                    Filtered.append(Convolution(LayN, Filter))
-                CombinedFilters = CombineGrids(Filtered)
-                LayN = UnChunk(CombinedFilters) 
-                Layers.append(UnChunk(CombinedFilters))
-                curMainList.pop(CurInd+1)
-                FiltInt += 1
-
-            while curMainList[CurInd + 1] == "P":
-                Pooled = []
-                for Dime in LayN:
-                    Pooled.append(PoolAry(2, 2, Dime))
-
-                curMainList.pop(CurInd+1)
-                if(type(curMainList[CurInd + 1]) != str):
-                    LayN = SuperUnChunk(Pooled)
-                else:
-                    LayN = Pooled
                     
-                Layers.append(LayN)
+                c_ex = (ctypes.c_double * len(Expected))(*Expected)         
+                c_imp = (ctypes.c_double * len(LayN))(*LayN)                
+                Back_C = GetUseNet(c_imp, len(InputData[0]), 0, c_ex)
+                return Back_C
+                #res = CalcPropagation(c_imp, len(LayN))
+                #count = len(LayN)
 
 
-            while curMainList[CurInd + 1] == "K":
-                Filtered = []
-
-                for Filter in Kernals[KernInt]:
-                    InfoTuple = KERNConvolution(LayN, Filter, FiltFun[KernInt], DerivativeDic[FiltFun[KernInt]])
-                    Filtered.append(InfoTuple[0])
+                #print("REMBER TO CHANGE RETRURN TYPE SO IT FITS WEIGHT LIST")
+                #print(9/0)
+                for uhehijo in range(int(len(lenlis)/2)): #??? Wtf is this
+                    CurInd += 1
 
 
-
-
-                curMainList.pop(CurInd+1)
-                if(type(curMainList[CurInd + 1]) != str):
-                    LayN = SuperUnChunk(Filtered)
-                else:
-                    LayN = Filtered
-
-                Layers.append(LayN)
-
-                KernInt += 1
-
-
-        down = np.dot(np.array(LayN), np.array(Turned[CurInd]).tolist())
-
-        LayN = (np.array(ActivationList(down,Activations[CurInd])) + BiasLis[CurInd]).tolist()
-        Layers.append(LayN)
-        CurInd += 1
-        
-    Turned.reverse()
-    BiasLis.reverse()
-    Layers.reverse()
-    Activations.reverse()
-    MainList.reverse()
-
-    return Layers[0]
+                
 
 
 
 
 
 
+            curMainList = copy.deepcopy(MainList)
+            FiltInt = 0
+            KernInt = 0
+
+            count = 0
+            countpo = 0
+            noio = []
+
+
+            #print(len(Back_C))
+            MainList.reverse()
+            WeightsSummed2.reverse()
+            Kernsi = 0
+            Zpoint = 0
+            #print(Back_C[0:784]) #Okay second layer is not propagating #We need to figure out why this is happening
+            #print(len(Back_C)) 
+            point = 0
+            for u in range(1,len(MainList)): #Must skip first layer
+
+                if(MainList[u] != "P"):
+                    y = lenlis[point]
+                    x = lenlis[point + 1]
+                    l = 0
+                    o = 0
+
+                    noio = []
+                    if (MainList[u] == "K"):
+                        l = ZList[Zpoint]
+                        o = len(KernsSummed[Kernsi])
+                        noio = np.reshape(Back_C[count:(count+(o*l*x*y))], (o, l, y, x)).tolist() # add z for kerns
+                    else:
+                        noio = np.reshape(Back_C[count:(count+(x*y))], (y, x)).tolist() # add z for kerns
+                    #print(x)
+                    #print(y)
+                    if (MainList[u] == "K"):
+                        #add a for loop for z
+                        for t in range(o):  
+                            for c in range(l):
+                                for m in range(y):  
+                                    for n in range(x):
+                                        KernsSummed[Kernsi][t][c][m][n] += noio[t][c][m][n] #I dont wanna have to deal with that now pls just work
+
+                        Kernsi += 1
+                        Zpoint += 1
+                        count += (x * y * l * o)
+                        point += 3
+                    else: 
+                        for m in range(y):  
+                            for n in range(x):
+                                WeightsSummed2[countpo][m][n] += noio[m][n] 
+
+                        countpo += 1
+
+                        count += (x * y)
+                        point += 2
+
+            WeightsSummed2.reverse()
+            MainList.reverse()
+            #print(WeightsSummed2[1][80])
+
+
+            if Back_C[len(flatweights)] == 1:
+                PreCor += 1
+
+
+            if Numbers % BarMod < 1:
+                LoadingPro = Sert.LoadingBar(LoadingPro)
+
+
+
+
+    
+
+        print(str(round((PreCor / BatchVal) * 100, 2)) + "%")
+
+        print("\n")
+        AddKernal(KernsSummed, Kernals, BatchValTrue)
+        OldLayer = AddTxT((WeightsSummed2, BiasNew), OldLayer, BatchValTrue)
+
+
+    print("Program ended, Training Complete")
